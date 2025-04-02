@@ -1,0 +1,61 @@
+package org.example.onlinegradebookapp.entity;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.Instant;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(name = "firstname", nullable = false)
+    private String firstName;
+
+    @Column(name = "lastname",nullable = false)
+    private String lastName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserRole role;
+
+    @Transient
+    private RoleName roleName;
+
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "class_id")
+    private SchoolClass schoolClass;
+
+    public void setUserRole(UserRole role) {
+        this.role = role;
+
+        switch (role) {
+            case ADMIN -> this.roleName = new AdminRole();
+            case TEACHER -> this.roleName = new TeacherRole();
+        }
+    }
+}

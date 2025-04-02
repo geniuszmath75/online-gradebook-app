@@ -1,0 +1,8 @@
+package org.example.onlinegradebookapp.entity;
+
+public class TeacherRole implements RoleName{
+    @Override
+    public String getRoleName() {
+        return "TEACHER";
+    }
+}
