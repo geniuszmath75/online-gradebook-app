@@ -1,6 +1,7 @@
 package org.example.onlinegradebookapp.entity;
 
 import jakarta.persistence.*;
+import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -15,8 +16,8 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "classes")
-public class SchoolClass {
+@Table(name = "subjects")
+public class Subject {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,9 +33,9 @@ public class SchoolClass {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @OneToMany(mappedBy = "schoolClass", cascade = CascadeType.ALL)
-    private List<User> teachers = new ArrayList<>();
+    @ManyToMany(mappedBy = "subjects")
+    private List<User> users = new ArrayList<>();
 
-    @OneToMany(mappedBy = "schoolClass", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
     private List<KnowledgeTest> tests = new ArrayList<>();
 }

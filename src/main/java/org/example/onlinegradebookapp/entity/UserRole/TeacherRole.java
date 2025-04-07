@@ -1,4 +1,4 @@
-package org.example.onlinegradebookapp.entity;
+package org.example.onlinegradebookapp.entity.UserRole;
 
 public class TeacherRole implements RoleName{
     @Override

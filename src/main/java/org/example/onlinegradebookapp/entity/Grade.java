@@ -1,28 +1,34 @@
 package org.example.onlinegradebookapp.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "classes")
-public class SchoolClass {
+@Table(name = "grades")
+public class Grade {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String name;
+    @Column(nullable = false,
+            precision = 2,
+            scale = 1,
+            columnDefinition = "numeric(2, 1) CHECK (grade >= 1 AND grade <= 6)")
+    private BigDecimal grade;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -32,9 +38,7 @@ public class SchoolClass {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @OneToMany(mappedBy = "schoolClass", cascade = CascadeType.ALL)
-    private List<User> teachers = new ArrayList<>();
-
-    @OneToMany(mappedBy = "schoolClass", cascade = CascadeType.ALL)
-    private List<KnowledgeTest> tests = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "student_id", nullable = false)
+    private Student student;
 }

@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
-import org.example.onlinegradebookapp.entity.UserRole.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -16,8 +15,8 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "users")
-public class User {
+@Table(name = "students")
+public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -31,15 +30,8 @@ public class User {
     @Column(name = "firstname", nullable = false)
     private String firstName;
 
-    @Column(name = "lastname",nullable = false)
+    @Column(name = "lastname", nullable = false)
     private String lastName;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserRole role;
-
-    @Transient
-    private RoleName roleName;
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -53,23 +45,6 @@ public class User {
     @JoinColumn(name = "class_id")
     private SchoolClass schoolClass;
 
-    @ManyToMany
-    @JoinTable(
-            name = "teachers_subjects",
-            joinColumns = @JoinColumn(name = "teacher_id"),
-            inverseJoinColumns = @JoinColumn(name = "subject_id")
-    )
-    private List<Subject> subjects = new ArrayList<>();
-
-    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
-    private List<KnowledgeTest> tests = new ArrayList<>();
-
-    public void setUserRole(UserRole role) {
-        this.role = role;
-
-        switch (role) {
-            case ADMIN -> this.roleName = new AdminRole();
-            case TEACHER -> this.roleName = new TeacherRole();
-        }
-    }
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
+    private List<Grade> grades = new ArrayList<>();
 }

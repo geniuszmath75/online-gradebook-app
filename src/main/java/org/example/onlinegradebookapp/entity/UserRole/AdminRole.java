@@ -1,4 +1,4 @@
-package org.example.onlinegradebookapp.entity;
+package org.example.onlinegradebookapp.entity.UserRole;
 
 public class AdminRole implements RoleName {
     @Override
@@ -6,3 +6,4 @@ public class AdminRole implements RoleName {
         return "ADMIN";
     }
 }
+
