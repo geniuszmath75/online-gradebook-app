@@ -7,13 +7,20 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    private final JwtAuthFilter jwtAuthFilter;
+
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+        this.jwtAuthFilter = jwtAuthFilter;
+    }
 
     // Configures the authentication manager using the provided authentication configuration
     @Bean
@@ -34,8 +41,15 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Disables CSRF protection
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll() // Allows public access to authentication endpoints
-                        .anyRequest().authenticated()) // Requires authentication for all other endpoints
-                .formLogin(AbstractHttpConfigurer::disable); // Disables default form login
+                        // Role-based endpoints
+                        .requestMatchers("/api/users").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers("/api/students").hasRole("STUDENT")
+                        .anyRequest().authenticated() // Requires authentication for all other endpoints
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session (required for JWT)
+                .formLogin(AbstractHttpConfigurer::disable) // Disables default form login
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter before Spring Security's default filter
+
 
         return http.build();
     }
