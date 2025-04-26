@@ -42,8 +42,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll() // Allows public access to authentication endpoints
                         // Role-based endpoints
-                        .requestMatchers("/api/users").hasAnyRole("TEACHER", "ADMIN")
-                        .requestMatchers("/api/students").hasRole("STUDENT")
+                        .requestMatchers("/api/users/**").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers("/api/students/**").hasRole("STUDENT")
+                        .requestMatchers("/api/classes/**").hasRole("TEACHER")
                         .anyRequest().authenticated() // Requires authentication for all other endpoints
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session (required for JWT)

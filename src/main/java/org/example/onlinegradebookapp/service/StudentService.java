@@ -3,11 +3,14 @@ package org.example.onlinegradebookapp.service;
 import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.exception.BadRequestException;
+import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.StudentRegistrationDto;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
 import org.example.onlinegradebookapp.repository.StudentRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class StudentService {
@@ -41,5 +44,17 @@ public class StudentService {
         }
 
         studentRepository.save(student);
+    }
+
+    // Finds all students
+    public List<Student> findAllStudents() {
+        return studentRepository.findAll();
+    }
+
+    // Finds a student with given ID
+    public Student findStudentById(long id) {
+        return studentRepository
+                .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Student with id "+id+" not found"));
     }
 }

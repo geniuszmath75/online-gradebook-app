@@ -3,6 +3,7 @@ package org.example.onlinegradebookapp.service;
 import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.exception.BadRequestException;
+import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.UserRegistrationDto;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
 import org.example.onlinegradebookapp.repository.UserRepository;
@@ -46,7 +47,15 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public List<User> getAll() {
+    // Finds all users
+    public List<User> findAllUsers() {
         return userRepository.findAll();
+    }
+
+    // Find a user with given ID
+    public User findUserById(Long id) {
+        return userRepository
+                .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id = " + id +" not found"));
     }
 }

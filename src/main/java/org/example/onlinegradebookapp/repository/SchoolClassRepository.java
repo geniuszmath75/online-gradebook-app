@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SchoolClassRepository extends JpaRepository<SchoolClass, Long> {
-
+    // Check if class exists with given name
+    Boolean existsByName(String name);
 }
