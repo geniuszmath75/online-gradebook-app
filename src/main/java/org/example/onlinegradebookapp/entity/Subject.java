@@ -1,6 +1,7 @@
 package org.example.onlinegradebookapp.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,5 +39,6 @@ public class Subject {
     private List<User> users = new ArrayList<>();
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
+    @JsonBackReference
     private List<KnowledgeTest> tests = new ArrayList<>();
 }

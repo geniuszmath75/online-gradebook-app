@@ -2,9 +2,12 @@ package org.example.onlinegradebookapp.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.time.format.DateTimeParseException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -41,4 +44,25 @@ public class GlobalExceptionHandler {
         ApiError error = new ApiError(HttpStatus.BAD_REQUEST.value(), errorMessage.toString());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
+
+    // Handles invalid format errors and returns a detailed 400 Bad Request Exception
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleInvalidFormat(HttpMessageNotReadableException ex) {
+        Throwable cause = ex.getMostSpecificCause();
+
+        if (cause instanceof DateTimeParseException || ex.getMessage().contains("LocalDate")) {
+            ApiError error = new ApiError(
+                    HttpStatus.BAD_REQUEST.value(),
+                    "Invalid date format. Expected format is YYYY-MM-DD."
+            );
+            return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+        }
+
+        ApiError error = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                "Malformed request. Please check your request body."
+        );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
 }

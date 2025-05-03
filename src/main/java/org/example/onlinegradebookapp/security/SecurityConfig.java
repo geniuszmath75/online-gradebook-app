@@ -45,6 +45,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers("/api/students/**").hasRole("STUDENT")
                         .requestMatchers("/api/classes/**").hasRole("TEACHER")
+                        .requestMatchers("/api/subjects/**").hasRole("TEACHER")
+                        .requestMatchers("/api/knowledge_tests/**").hasRole("TEACHER")
                         .anyRequest().authenticated() // Requires authentication for all other endpoints
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session (required for JWT)
