@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 
+import java.util.List;
+
 @Data
 public class UserRegistrationDto {
     @Email(message = "Invalid email")
@@ -24,4 +26,6 @@ public class UserRegistrationDto {
     private UserRole role;
 
     private Long classId;
+
+    private List<SubjectDto> subjects;
 }

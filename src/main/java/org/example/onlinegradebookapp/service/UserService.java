@@ -1,11 +1,13 @@
 package org.example.onlinegradebookapp.service;
 
 import org.example.onlinegradebookapp.entity.SchoolClass;
+import org.example.onlinegradebookapp.entity.Subject;
 import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.UserRegistrationDto;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
+import org.example.onlinegradebookapp.repository.SubjectRepository;
 import org.example.onlinegradebookapp.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,11 +19,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SchoolClassRepository classRepository;
+    private final SubjectRepository subjectRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, SchoolClassRepository classRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, SchoolClassRepository classRepository, SubjectRepository subjectRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.classRepository = classRepository;
+        this.subjectRepository = subjectRepository;
     }
 
     // Registers a new user using data from the registration DTO
@@ -40,8 +44,23 @@ public class UserService {
 
         // If classId is provided then add it to user entity
         if(dto.getClassId() != null) {
-            SchoolClass schoolClass = classRepository.findById(dto.getClassId()).orElseThrow();
+            SchoolClass schoolClass = classRepository
+                    .findById(dto.getClassId())
+                    .orElseThrow(() -> new BadRequestException("Class with id=" + dto.getClassId() + " not found"));
             user.setSchoolClass(schoolClass);
+        }
+
+        // If subjects are provided then add them to user entity
+        if(dto.getSubjects() != null) {
+            System.out.println("OK");
+            List<Subject> subjects = dto.getSubjects()
+                    .stream()
+                    .map(subjectDto -> subjectRepository
+                            .findByName(subjectDto.getName())
+                            .orElseThrow(() -> new BadRequestException("Subject '" + subjectDto.getName() + "' not found"))
+                    )
+                    .toList();
+            user.setSubjects(subjects);
         }
 
         userRepository.save(user);

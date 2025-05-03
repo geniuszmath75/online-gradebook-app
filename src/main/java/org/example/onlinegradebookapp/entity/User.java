@@ -1,5 +1,6 @@
 package org.example.onlinegradebookapp.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,6 +12,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
 
 @Entity
 @Getter
@@ -54,6 +56,7 @@ public class User {
     private SchoolClass schoolClass;
 
     @ManyToMany
+    @JsonManagedReference
     @JoinTable(
             name = "teachers_subjects",
             joinColumns = @JoinColumn(name = "teacher_id"),

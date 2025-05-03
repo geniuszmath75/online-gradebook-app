@@ -1,7 +1,7 @@
 package org.example.onlinegradebookapp.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -34,6 +34,7 @@ public class Subject {
     private Instant updatedAt;
 
     @ManyToMany(mappedBy = "subjects")
+    @JsonBackReference
     private List<User> users = new ArrayList<>();
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
