@@ -1,9 +1,13 @@
 package org.example.onlinegradebookapp.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.example.onlinegradebookapp.exception.ApiError;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -43,27 +47,36 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // Extract token from header
         jwt = authHeader.substring(7);
 
-        // Extract email from token
-        userEmail = jwtService.extractUsername(jwt);
+        try {
+            // Extract email from token
+            userEmail = jwtService.extractUsername(jwt);
 
-        // Check if user/student hasn't authenticated yet
-        if(SecurityContextHolder.getContext().getAuthentication() == null) {
-            // Load user/student data
-            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+            // Check if user/student hasn't authenticated yet
+            if(SecurityContextHolder.getContext().getAuthentication() == null) {
+                // Load user/student data
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
-            // Token validation
-            if(jwtService.isTokenValid(jwt, userDetails)) {
-                // Create authorization token in Spring Security
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                // Token validation
+                if(jwtService.isTokenValid(jwt, userDetails)) {
+                    // Create authorization token in Spring Security
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // Set authorization in security context
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    // Set authorization in security context
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
-        }
 
-        // Pass the request further in the filter chain
-        filterChain.doFilter(request, response);
+            // Pass the request further in the filter chain
+            filterChain.doFilter(request, response);
+        } catch(ExpiredJwtException ex) {
+            // Return 401 error if token expired
+            ObjectMapper mapper = new ObjectMapper();
+            ApiError error = new ApiError(HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
+            response.setStatus(HttpStatus.UNAUTHORIZED.value()); // Set status code
+            response.setContentType("application/json"); // Set content type
+            mapper.writeValue(response.getWriter(), error); // Set response body
+        }
     }
 }

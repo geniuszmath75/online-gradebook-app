@@ -1,5 +1,6 @@
 package org.example.onlinegradebookapp.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -39,6 +40,12 @@ public class Grade {
     private Instant updatedAt;
 
     @ManyToOne
+    @JsonManagedReference
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
+
+    @ManyToOne
+    @JsonManagedReference
+    @JoinColumn(name = "test_id", nullable = false)
+    private KnowledgeTest test;
 }

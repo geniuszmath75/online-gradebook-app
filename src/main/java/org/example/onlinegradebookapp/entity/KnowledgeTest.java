@@ -13,6 +13,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -60,6 +62,10 @@ public class KnowledgeTest {
     @JsonManagedReference
     @JoinColumn(name = "teacher_id", nullable = false)
     private User teacher;
+
+    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL)
+    @JsonBackReference
+    private List<Grade> grades = new ArrayList<>();
 
     public void setCategoryName(TestCategory category) {
         this.category = category;
