@@ -4,13 +4,16 @@ import org.example.onlinegradebookapp.entity.Grade;
 import org.example.onlinegradebookapp.entity.KnowledgeTest;
 import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.exception.BadRequestException;
-import org.example.onlinegradebookapp.payload.GradeDto;
+import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
+import org.example.onlinegradebookapp.payload.request.GradeDto;
+import org.example.onlinegradebookapp.payload.request.GradeUpdateDto;
 import org.example.onlinegradebookapp.repository.GradeRepository;
 import org.example.onlinegradebookapp.repository.KnowledgeTestRepository;
 import org.example.onlinegradebookapp.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class GradeService {
@@ -67,5 +70,51 @@ public class GradeService {
         grade.setTest(test);
 
         gradeRepository.save(grade);
+    }
+
+    // Update attributes of grade with given ID
+    public void updateGradeAttributes(GradeUpdateDto dto, Long id) throws ResourceNotFoundException {
+        // Find a grade if exists in database
+        Optional<Grade> optionalGrade = gradeRepository.findById(id);
+
+        // If the grade exists, update it
+        if(optionalGrade.isPresent()) {
+            Grade grade = optionalGrade.get();
+
+            // Check if 'grade' is given
+            if(dto.getGrade() != null) {
+                grade.setGrade(dto.getGrade());
+            }
+            // Check if 'description' is given
+            if(dto.getDescription() != null) {
+                grade.setDescription(dto.getDescription());
+            }
+            // Check if 'studentId' is given
+            if(dto.getStudentId() != null) {
+                Student updatedStudent = studentRepository
+                        .findById(dto.getStudentId())
+                        .orElseThrow(() -> new BadRequestException("Student with id=" + dto.getStudentId() + " not found"));
+                grade.setStudent(updatedStudent);
+            }
+            // Check if 'testId' is given
+            if(dto.getTestId() != null) {
+                KnowledgeTest updatedTest = knowledgeTestRepository
+                        .findById(dto.getTestId())
+                        .orElseThrow(() -> new BadRequestException("Knowledge test with id=" + dto.getTestId() + " not found"));
+                grade.setTest(updatedTest);
+            }
+            gradeRepository.save(grade);
+        } else {
+            throw new ResourceNotFoundException("Grade with id=" + id + " not found");
+        }
+    }
+
+    // Delete a grade with given ID
+    public void deleteGrade(Long id) {
+        if(gradeRepository.existsById(id)) {
+            gradeRepository.deleteById(id);
+        } else {
+            throw new ResourceNotFoundException("Grade with id=" + id + " not found");
+        }
     }
 }

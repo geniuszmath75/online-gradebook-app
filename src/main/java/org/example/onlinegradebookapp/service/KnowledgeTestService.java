@@ -6,7 +6,8 @@ import org.example.onlinegradebookapp.entity.Subject;
 import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
-import org.example.onlinegradebookapp.payload.KnowledgeTestDto;
+import org.example.onlinegradebookapp.payload.request.KnowledgeTestDto;
+import org.example.onlinegradebookapp.payload.request.KnowledgeTestUpdateDto;
 import org.example.onlinegradebookapp.repository.KnowledgeTestRepository;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
 import org.example.onlinegradebookapp.repository.SubjectRepository;
@@ -14,6 +15,7 @@ import org.example.onlinegradebookapp.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class KnowledgeTestService {
@@ -74,5 +76,60 @@ public class KnowledgeTestService {
         knowledgeTest.setTeacher(teacher);
 
         knowledgeTestRepository.save(knowledgeTest);
+    }
+
+    // Update attributes of knowledge test with given ID
+    public void updateKnowledgeTestAttributes(KnowledgeTestUpdateDto dto, Long id) throws ResourceNotFoundException {
+        // Find a knowledge test if exists in database
+        Optional<KnowledgeTest> optionalTest = knowledgeTestRepository.findById(id);
+
+        // If the knowledge test exists, update it
+        if(optionalTest.isPresent()) {
+            KnowledgeTest test = optionalTest.get();
+
+            // Check if 'name' is given
+            if(dto.getName() != null) {
+                test.setName(dto.getName());
+            }
+            // Check if 'category' is given
+            if(dto.getCategory() != null) {
+                test.setCategoryName(dto.getCategory());
+            }
+            // Check if 'testDate' is given
+            if(dto.getTestDate() != null) {
+                test.setTestDate(dto.getTestDate());
+            }
+            // Check if 'classId' is given
+            if(dto.getClassId() != null) {
+                SchoolClass updatedClass = classRepository
+                        .findById(dto.getClassId())
+                        .orElseThrow(() -> new BadRequestException("School class with id=" + dto.getClassId() + " not found"));
+                test.setSchoolClass(updatedClass);
+            }
+            if(dto.getSubjectId() != null) {
+                Subject updatedSubject = subjectRepository
+                        .findById(dto.getSubjectId())
+                        .orElseThrow(() -> new BadRequestException("Subject with id=" + dto.getSubjectId() + " not found"));
+                test.setSubject(updatedSubject);
+            }
+            if(dto.getTeacherId() != null) {
+                User updatedTeacher = userRepository
+                        .findById(dto.getTeacherId())
+                        .orElseThrow(() -> new BadRequestException("User with id=" + dto.getTeacherId() + " not found"));
+                test.setTeacher(updatedTeacher);
+            }
+            knowledgeTestRepository.save(test);
+        } else {
+            throw new ResourceNotFoundException("Knowledge test with id=" + id + " not found");
+        }
+    }
+
+    // Delete a knowledge test with given ID
+    public void deleteKnowledgeTest(Long id) {
+        if(knowledgeTestRepository.existsById(id)) {
+            knowledgeTestRepository.deleteById(id);
+        } else {
+            throw new ResourceNotFoundException("Knowledge test with id=" + id + " not found");
+        }
     }
 }

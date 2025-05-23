@@ -1,12 +1,13 @@
 package org.example.onlinegradebookapp.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.example.onlinegradebookapp.entity.TestCategory.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -34,6 +35,7 @@ public class KnowledgeTest {
     private TestCategory category;
 
     @Transient
+    @JsonIgnore
     private CategoryName categoryName;
 
     @Column(name = "test_date", nullable = false)
@@ -49,22 +51,22 @@ public class KnowledgeTest {
     private Instant updatedAt;
 
     @ManyToOne
-    @JsonManagedReference
+    @JsonBackReference
     @JoinColumn(name = "class_id", nullable = false)
     private SchoolClass schoolClass;
 
     @ManyToOne
-    @JsonManagedReference
+    @JsonBackReference
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;
 
     @ManyToOne
-    @JsonManagedReference
+    @JsonBackReference
     @JoinColumn(name = "teacher_id", nullable = false)
     private User teacher;
 
     @OneToMany(mappedBy = "test", cascade = CascadeType.ALL)
-    @JsonBackReference
+    @JsonManagedReference
     private List<Grade> grades = new ArrayList<>();
 
     public void setCategoryName(TestCategory category) {

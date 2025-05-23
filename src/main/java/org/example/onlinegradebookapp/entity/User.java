@@ -1,12 +1,16 @@
 package org.example.onlinegradebookapp.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
-import org.example.onlinegradebookapp.entity.UserRole.*;
+import lombok.Setter;
+import org.example.onlinegradebookapp.entity.UserRole.AdminRole;
+import org.example.onlinegradebookapp.entity.UserRole.RoleName;
+import org.example.onlinegradebookapp.entity.UserRole.TeacherRole;
+import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -42,6 +46,7 @@ public class User {
     private UserRole role;
 
     @Transient
+    @JsonIgnore
     private RoleName roleName;
 
     @CreationTimestamp
@@ -53,11 +58,12 @@ public class User {
     private Instant updatedAt;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "class_id")
     private SchoolClass schoolClass;
 
     @ManyToMany
-    @JsonManagedReference
+    @JsonBackReference
     @JoinTable(
             name = "teachers_subjects",
             joinColumns = @JoinColumn(name = "teacher_id"),
@@ -66,7 +72,7 @@ public class User {
     private List<Subject> subjects = new ArrayList<>();
 
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
-    @JsonBackReference
+    @JsonManagedReference
     private List<KnowledgeTest> tests = new ArrayList<>();
 
     public void setUserRole(UserRole role) {

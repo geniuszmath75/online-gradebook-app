@@ -1,15 +1,15 @@
-package org.example.onlinegradebookapp.payload;
+package org.example.onlinegradebookapp.payload.request;
 
 import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import org.example.onlinegradebookapp.entity.TestCategory.TestCategory;
+import org.example.onlinegradebookapp.validation.AtLeastOneField;
 
 import java.time.LocalDate;
 
 @Data
-public class KnowledgeTestDto {
-    @NotBlank(message = "Test name cannot be empty")
+@AtLeastOneField(fields = {"name", "category", "testDate", "classId", "subjectId", "teacherId"})
+public class KnowledgeTestUpdateDto {
     private String name;
 
     private TestCategory category;

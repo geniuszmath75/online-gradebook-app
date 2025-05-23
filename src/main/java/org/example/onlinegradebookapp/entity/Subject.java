@@ -1,11 +1,10 @@
 package org.example.onlinegradebookapp.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -35,10 +34,10 @@ public class Subject {
     private Instant updatedAt;
 
     @ManyToMany(mappedBy = "subjects")
-    @JsonBackReference
+    @JsonManagedReference
     private List<User> users = new ArrayList<>();
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
-    @JsonBackReference
+    @JsonManagedReference
     private List<KnowledgeTest> tests = new ArrayList<>();
 }

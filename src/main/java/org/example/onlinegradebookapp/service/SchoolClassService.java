@@ -3,11 +3,12 @@ package org.example.onlinegradebookapp.service;
 import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
-import org.example.onlinegradebookapp.payload.SchoolClassDto;
+import org.example.onlinegradebookapp.payload.request.SchoolClassDto;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SchoolClassService {
@@ -39,5 +40,31 @@ public class SchoolClassService {
         schoolClass.setName(dto.getName());
 
         schoolClassRepository.save(schoolClass);
+    }
+
+    // Update a school class with given ID
+    public void updateSchoolClass(SchoolClassDto dto, Long id) throws ResourceNotFoundException {
+        Optional<SchoolClass> optionalSchoolClass = schoolClassRepository.findById(id);
+
+        // If school class exists, update it
+        if(optionalSchoolClass.isPresent()) {
+            SchoolClass schoolClass = new SchoolClass();
+
+            schoolClass.setId(id);
+            schoolClass.setCreatedAt(optionalSchoolClass.get().getCreatedAt());
+            schoolClass.setName(dto.getName());
+            schoolClassRepository.save(schoolClass);
+        } else {
+            throw new ResourceNotFoundException("School class with id=" + id + " not found");
+        }
+    }
+
+    // Delete a school class with given ID
+    public void deleteSchoolClass(Long id) {
+        if(schoolClassRepository.existsById(id)) {
+            schoolClassRepository.deleteById(id);
+        } else {
+            throw new ResourceNotFoundException("School class with id=" + id + " not found");
+        }
     }
 }

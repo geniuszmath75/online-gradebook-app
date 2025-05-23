@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.onlinegradebookapp.exception.ApiError;
+import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -77,6 +78,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             response.setStatus(HttpStatus.UNAUTHORIZED.value()); // Set status code
             response.setContentType("application/json"); // Set content type
             mapper.writeValue(response.getWriter(), error); // Set response body
+        } catch(ResourceNotFoundException ex) {
+            ObjectMapper mapper = new ObjectMapper();
+            ApiError error = new ApiError(HttpStatus.NOT_FOUND.value(), ex.getMessage());
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            response.setContentType("application/json");
+            mapper.writeValue(response.getWriter(), error);
         }
     }
 }

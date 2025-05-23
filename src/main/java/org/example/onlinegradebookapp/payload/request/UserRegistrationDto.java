@@ -1,4 +1,4 @@
-package org.example.onlinegradebookapp.payload;
+package org.example.onlinegradebookapp.payload.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -14,6 +14,7 @@ public class UserRegistrationDto {
     @NotBlank(message = "Email cannot be empty")
     private String email;
 
+    @NotBlank(message = "Password cannot be empty")
     @Size(min = 6, message = "Password must be at least 6 characters long")
     private String password;
 

@@ -1,4 +1,4 @@
-package org.example.onlinegradebookapp.payload;
+package org.example.onlinegradebookapp.payload.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

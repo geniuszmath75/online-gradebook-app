@@ -46,6 +46,6 @@ public class CustomUserDetailsService implements UserDetailsService {
             );
         }
 
-        throw new ResourceNotFoundException("User not found with email: " + email);
+        throw new ResourceNotFoundException("The email has been updated. Log in again to get a new token.");
     }
 }

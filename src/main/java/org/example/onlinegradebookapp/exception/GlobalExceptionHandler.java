@@ -1,5 +1,6 @@
 package org.example.onlinegradebookapp.exception;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -45,7 +46,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    // Handles invalid format errors and returns a detailed 400 Bad Request Exception
+    // Handles invalid format errors(LocalDate, enums) and returns a detailed 400 Bad Request Exception
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleInvalidFormat(HttpMessageNotReadableException ex) {
         Throwable cause = ex.getMostSpecificCause();
@@ -54,6 +55,13 @@ public class GlobalExceptionHandler {
             ApiError error = new ApiError(
                     HttpStatus.BAD_REQUEST.value(),
                     "Invalid date format. Expected format is YYYY-MM-DD."
+            );
+            return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+        }
+        if(cause instanceof InvalidFormatException) {
+            ApiError error = new ApiError(
+                    HttpStatus.BAD_REQUEST.value(),
+                    cause.getMessage()
             );
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         }
