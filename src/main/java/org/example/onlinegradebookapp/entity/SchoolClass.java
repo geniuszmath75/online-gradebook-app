@@ -34,8 +34,8 @@ public class SchoolClass {
     private Instant updatedAt;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "schoolClass", cascade = CascadeType.ALL)
-    private List<User> teachers = new ArrayList<>();
+    @OneToOne(mappedBy = "schoolClass")
+    private User teacher;
 
     @OneToMany(mappedBy = "schoolClass", cascade = CascadeType.ALL)
     @JsonManagedReference

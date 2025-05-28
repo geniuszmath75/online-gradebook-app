@@ -14,6 +14,7 @@ import org.example.onlinegradebookapp.payload.request.StudentUpdateDto;
 import org.example.onlinegradebookapp.service.StudentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,7 @@ public class StudentController {
     }
 
     @GetMapping
+    @PreAuthorize(value = "hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Get all students",
             description = "Get a list of all students from the database")
     public ResponseEntity<?> getAllStudents() {
@@ -38,6 +40,7 @@ public class StudentController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize(value = "hasAnyRole('ADMIN', 'TEACHER') or #id == authentication.principal.id")
     @Operation(summary = "Get a single student",
             description = "Get a single student with given ID",
             responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Student.class)))})
@@ -48,6 +51,7 @@ public class StudentController {
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize(value = "hasAnyRole('ADMIN', 'TEACHER') or #id == authentication.principal.id")
     @Operation(summary = "Update attributes of the single student",
             description = "Update attributes of the single student with given ID")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Student ID")
@@ -61,6 +65,7 @@ public class StudentController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize(value = "hasRole('ADMIN')")
     @Operation(summary = "Delete a student",
             description = "Delete a student by ID from database")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Student ID")

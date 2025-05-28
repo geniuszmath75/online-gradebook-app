@@ -3,6 +3,7 @@ package org.example.onlinegradebookapp.service;
 import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.entity.Subject;
 import org.example.onlinegradebookapp.entity.User;
+import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.SubjectDto;
@@ -11,6 +12,9 @@ import org.example.onlinegradebookapp.payload.request.UserUpdateDto;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
 import org.example.onlinegradebookapp.repository.SubjectRepository;
 import org.example.onlinegradebookapp.repository.UserRepository;
+import org.example.onlinegradebookapp.security.CustomUserDetails;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +41,13 @@ public class UserService {
         // Check if user with given email already exists in DB
         if(userRepository.existsByEmail(dto.getEmail())) {
             throw new BadRequestException("Email '" + dto.getEmail() + "' already exists");
+        }
+        // Check if ADMIN role can be assigned
+        if(dto.getRole().equals(UserRole.ADMIN)) {
+            Long adminCount = userRepository.countByRole(UserRole.ADMIN);
+            if(adminCount > 0) {
+                throw new BadRequestException("There can only be one ADMIN user.");
+            }
         }
 
         User user = new User();
@@ -106,13 +117,30 @@ public class UserService {
             }
             // Check if 'role' is given
             if(dto.getRole() != null) {
+                // Check if ADMIN role can be assigned
+                if(dto.getRole().equals(UserRole.ADMIN)) {
+                    Long adminCount = userRepository.countByRole(UserRole.ADMIN);
+                    if(adminCount > 0) {
+                        throw new BadRequestException("There can only be one ADMIN user.");
+                    }
+                }
                 updatedUser.setUserRole(dto.getRole());
             }
             // Check if 'classId' is given
             if(dto.getClassId() != null) {
+                // Check if class exists
                 SchoolClass updatedClass = classRepository
                         .findById(dto.getClassId())
                         .orElseThrow(() -> new BadRequestException("School class with id=" + dto.getClassId() + " not found"));
+
+                // Detach old user if assigned
+                if(updatedClass.getTeacher() != null) {
+                    User oldUser = updatedClass.getTeacher();
+                    oldUser.setSchoolClass(null);
+                    userRepository.save(oldUser);
+                }
+
+                // Assign new user to class
                 updatedUser.setSchoolClass(updatedClass);
             }
             // Check if 'subjects' is given
@@ -145,4 +173,18 @@ public class UserService {
                 )
                 .collect(Collectors.toList());
     }
+
+    // Get logged user ID
+    public Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        return userDetails.getId();
+    }
+
+    public boolean hasRole(UserRole role) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_" + role));
+    }
+
 }

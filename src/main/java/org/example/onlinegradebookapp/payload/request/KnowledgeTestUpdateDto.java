@@ -8,7 +8,7 @@ import org.example.onlinegradebookapp.validation.AtLeastOneField;
 import java.time.LocalDate;
 
 @Data
-@AtLeastOneField(fields = {"name", "category", "testDate", "classId", "subjectId", "teacherId"})
+@AtLeastOneField(fields = {"name", "category", "testDate", "classId", "subjectId"})
 public class KnowledgeTestUpdateDto {
     private String name;
 
@@ -20,6 +20,4 @@ public class KnowledgeTestUpdateDto {
     private Long classId;
 
     private Long subjectId;
-
-    private Long teacherId;
 }

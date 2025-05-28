@@ -25,7 +25,4 @@ public class KnowledgeTestDto {
 
     @NotNull(message = "Subject ID cannot be empty")
     private Long subjectId;
-
-    @NotNull(message = "Teacher ID cannot be empty")
-    private Long teacherId;
 }

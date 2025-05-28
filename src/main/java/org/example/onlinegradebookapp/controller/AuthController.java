@@ -8,7 +8,9 @@ import org.example.onlinegradebookapp.exception.UnauthorizedException;
 import org.example.onlinegradebookapp.payload.request.LoginDto;
 import org.example.onlinegradebookapp.payload.request.StudentRegistrationDto;
 import org.example.onlinegradebookapp.payload.request.UserRegistrationDto;
+import org.example.onlinegradebookapp.security.CustomUserDetails;
 import org.example.onlinegradebookapp.security.JwtService;
+import org.example.onlinegradebookapp.service.CustomUserDetailsService;
 import org.example.onlinegradebookapp.service.StudentService;
 import org.example.onlinegradebookapp.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -18,8 +20,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,10 +37,10 @@ public class AuthController {
     private final StudentService studentService;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
 
     public AuthController(UserService userService, StudentService studentService, AuthenticationManager authenticationManager,
-                          JwtService jwtService, UserDetailsService userDetailsService) {
+                          JwtService jwtService, CustomUserDetailsService userDetailsService) {
         this.userService = userService;
         this.studentService = studentService;
         this.authenticationManager = authenticationManager;
@@ -74,7 +74,7 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
             );
             SecurityContextHolder.getContext().setAuthentication(auth);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(dto.getEmail());
+            CustomUserDetails userDetails = userDetailsService.loadUserByUsername(dto.getEmail());
             String token = jwtService.generateToken(userDetails);
             Map<String, String> response = new HashMap<>();
             response.put("email", dto.getEmail());

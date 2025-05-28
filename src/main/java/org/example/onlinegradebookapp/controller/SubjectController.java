@@ -13,6 +13,7 @@ import org.example.onlinegradebookapp.payload.request.SubjectDto;
 import org.example.onlinegradebookapp.service.SubjectService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,6 +47,7 @@ public class SubjectController {
     }
 
     @PostMapping
+    @PreAuthorize(value = "hasRole('ADMIN')")
     @Operation(summary = "Create a new subject",
             description = "Create a new subject in database")
     public ResponseEntity<?> createSubject(@Valid @RequestBody SubjectDto dto) {
@@ -54,6 +56,7 @@ public class SubjectController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize(value = "hasRole('ADMIN')")
     @Operation(summary = "Update a single subject",
             description = "Update a single subject with given ID")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Subject ID")
@@ -63,6 +66,7 @@ public class SubjectController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize(value = "hasRole('ADMIN')")
     @Operation(summary = "Delete a subject",
             description = "Delete a subject by ID from database")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Subject ID")

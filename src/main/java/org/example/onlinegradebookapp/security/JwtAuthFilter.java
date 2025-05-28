@@ -8,11 +8,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.onlinegradebookapp.exception.ApiError;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
+import org.example.onlinegradebookapp.service.CustomUserDetailsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -22,9 +22,9 @@ import java.io.IOException;
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
 
-    public JwtAuthFilter(JwtService jwtService, UserDetailsService userDetailsService) {
+    public JwtAuthFilter(JwtService jwtService, CustomUserDetailsService userDetailsService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
     }
@@ -55,7 +55,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             // Check if user/student hasn't authenticated yet
             if(SecurityContextHolder.getContext().getAuthentication() == null) {
                 // Load user/student data
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+                CustomUserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
                 // Token validation
                 if(jwtService.isTokenValid(jwt, userDetails)) {
@@ -71,8 +71,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             // Pass the request further in the filter chain
             filterChain.doFilter(request, response);
-        } catch(ExpiredJwtException ex) {
-            // Return 401 error if token expired
+        } catch(ExpiredJwtException | UsernameNotFoundException ex) {
+            // Return 401 error if token expired or email has changed
             ObjectMapper mapper = new ObjectMapper();
             ApiError error = new ApiError(HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
             response.setStatus(HttpStatus.UNAUTHORIZED.value()); // Set status code

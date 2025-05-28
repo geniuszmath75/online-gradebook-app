@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -15,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
 
@@ -43,13 +45,12 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Allows public access to swagger docs
                         .requestMatchers("/api/auth/**").permitAll() // Allows public access to authentication endpoints
                         // Role-based endpoints
-                        .requestMatchers("/api/**").hasRole("ADMIN")
-                        .requestMatchers("/api/users/**").hasAnyRole("TEACHER")
-                        .requestMatchers("/api/students/**").hasRole("STUDENT")
-                        .requestMatchers("/api/classes/**").hasRole("TEACHER")
-                        .requestMatchers("/api/subjects/**").hasRole("TEACHER")
-                        .requestMatchers("/api/knowledge_tests/**").hasRole("TEACHER")
-                        .requestMatchers("/api/grades/**").hasRole("TEACHER")
+                        .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "TEACHER")
+                        .requestMatchers("/api/students/**").hasAnyRole("ADMIN", "STUDENT", "TEACHER")
+                        .requestMatchers("/api/classes/**").hasAnyRole("ADMIN", "TEACHER")
+                        .requestMatchers("/api/subjects/**").hasAnyRole("ADMIN", "TEACHER")
+                        .requestMatchers("/api/knowledge_tests/**").hasAnyRole("ADMIN", "TEACHER")
+                        .requestMatchers("/api/grades/**").hasAnyRole("ADMIN", "TEACHER")
                         .anyRequest().authenticated() // Requires authentication for all other endpoints
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session (required for JWT)
