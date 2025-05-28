@@ -14,6 +14,7 @@ import org.example.onlinegradebookapp.payload.request.UserUpdateDto;
 import org.example.onlinegradebookapp.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +39,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize(value = "hasRole('ADMIN') or #id == authentication.principal.id")
     @Operation(summary = "Get a single user (teacher)",
             description = "Get a single user (teacher) with given ID",
             responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = User.class)))})
@@ -48,6 +50,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize(value = "hasRole('ADMIN') or #id == authentication.principal.id")
     @Operation(summary = "Update attributes of the single user",
             description = "Update attributes of the single user with given ID")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "User ID")
@@ -61,6 +64,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize(value = "hasRole('ADMIN')")
     @Operation(summary = "Delete a user",
             description = "Delete a user by ID from database")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "User ID")

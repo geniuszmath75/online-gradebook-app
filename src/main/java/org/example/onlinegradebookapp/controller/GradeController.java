@@ -15,6 +15,7 @@ import org.example.onlinegradebookapp.payload.request.GradeUpdateDto;
 import org.example.onlinegradebookapp.service.GradeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -69,6 +70,7 @@ public class GradeController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize(value = "hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Delete a grade",
     description = "Delete a grade by ID from database")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Grade ID")

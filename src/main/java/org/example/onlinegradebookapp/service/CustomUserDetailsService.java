@@ -2,12 +2,12 @@ package org.example.onlinegradebookapp.service;
 
 import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.entity.User;
-import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.repository.StudentRepository;
 import org.example.onlinegradebookapp.repository.UserRepository;
+import org.example.onlinegradebookapp.security.CustomUserDetails;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,27 +25,28 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     // Loads a user by email from either the user or student repository
     @Override
-    public UserDetails loadUserByUsername(String email) throws ResourceNotFoundException {
+    public CustomUserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Optional<User> user = userRepository.findByEmail(email);
-        if(user.isPresent()) {
-            // Returns user details for a regular user with assigned role
-            return new org.springframework.security.core.userdetails.User(
+
+        // Returns user details for a regular user with assigned role
+        if (user.isPresent()) {
+            return new CustomUserDetails(
+                    user.get().getId(),
                     user.get().getEmail(),
                     user.get().getPassword(),
                     List.of(new SimpleGrantedAuthority("ROLE_" + user.get().getRole()))
             );
-        }
+        } else {
+            Student student = studentRepository.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("The email has been updated. Log in again to get a new token."));
 
-        Optional<Student> student = studentRepository.findByEmail(email);
-        if(student.isPresent()) {
             // Returns user details for a student with a hardcoded "STUDENT" role
-            return new org.springframework.security.core.userdetails.User(
-                    student.get().getEmail(),
-                    student.get().getPassword(),
+            return new CustomUserDetails(
+                    student.getId(),
+                    student.getEmail(),
+                    student.getPassword(),
                     List.of(new SimpleGrantedAuthority("ROLE_" + "STUDENT"))
             );
         }
-
-        throw new ResourceNotFoundException("The email has been updated. Log in again to get a new token.");
     }
 }

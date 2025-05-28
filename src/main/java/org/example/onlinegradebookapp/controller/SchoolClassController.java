@@ -13,6 +13,7 @@ import org.example.onlinegradebookapp.payload.request.SchoolClassDto;
 import org.example.onlinegradebookapp.service.SchoolClassService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,6 +47,7 @@ public class SchoolClassController {
     }
 
     @PostMapping
+    @PreAuthorize(value = "hasRole('ADMIN')")
     @Operation(summary = "Create a new school class",
             description = "Create a new school class in database")
     public ResponseEntity<?> createSchoolClass(@Valid @RequestBody SchoolClassDto dto) {
@@ -54,6 +56,7 @@ public class SchoolClassController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize(value = "hasRole('ADMIN')")
     @Operation(summary = "Update a single school class",
             description = "Update a single school class with given ID")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "School class ID")
@@ -63,6 +66,7 @@ public class SchoolClassController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize(value = "hasRole('ADMIN')")
     @Operation(summary = "Delete a school class",
             description = "Delete a school class by ID from database")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "School class ID")

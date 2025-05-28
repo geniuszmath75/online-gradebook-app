@@ -2,7 +2,6 @@ package org.example.onlinegradebookapp.security;
 
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.*;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
@@ -20,13 +19,13 @@ public class JwtService {
     private static final String JWT_SECRET = "d6tKZMHgcGE9M6g9sJER8JBXaimddV3R5dXn6nSBvQU3E5Amm7BWm9iNjnhKmAgR";
 
     // Generate token JWT for user/student
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(CustomUserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         return createToken(claims, userDetails);
     }
 
     // Create token with additional data(claims) and UserDetails
-    private String createToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    private String createToken(Map<String, Object> extraClaims, CustomUserDetails userDetails) {
         return Jwts
                 .builder()
                 .setClaims(extraClaims) // Additional data
@@ -75,7 +74,7 @@ public class JwtService {
     }
 
     // Check if token is valid and assigned to given user/student
-    public boolean isTokenValid(String token, UserDetails userDetails) {
+    public boolean isTokenValid(String token, CustomUserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }

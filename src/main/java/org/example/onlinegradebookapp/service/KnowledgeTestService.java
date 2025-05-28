@@ -4,8 +4,10 @@ import org.example.onlinegradebookapp.entity.KnowledgeTest;
 import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.entity.Subject;
 import org.example.onlinegradebookapp.entity.User;
+import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
+import org.example.onlinegradebookapp.exception.UnauthorizedException;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestDto;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestUpdateDto;
 import org.example.onlinegradebookapp.repository.KnowledgeTestRepository;
@@ -23,15 +25,17 @@ public class KnowledgeTestService {
     private final SchoolClassRepository classRepository;
     private final SubjectRepository subjectRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
 
     public KnowledgeTestService(KnowledgeTestRepository knowledgeTestRepository,
                                 SchoolClassRepository classRepository,
                                 SubjectRepository subjectRepository,
-                                UserRepository userRepository) {
+                                UserRepository userRepository, UserService userService) {
         this.knowledgeTestRepository = knowledgeTestRepository;
         this.classRepository = classRepository;
         this.subjectRepository = subjectRepository;
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     // Find all knowledge tests
@@ -69,10 +73,13 @@ public class KnowledgeTestService {
                 .orElseThrow(() -> new BadRequestException("Subject with id=" + dto.getSubjectId() + " not found"));
         knowledgeTest.setSubject(subject);
 
-        // Check if user with given id exists and set it to entity
+        // Get current user ID
+        Long currentUserId = userService.getCurrentUserId();
+
+        // Set logged user as test owner
         User teacher = userRepository
-                .findById(dto.getTeacherId())
-                .orElseThrow(() -> new BadRequestException("User with id=" + dto.getTeacherId() + " not found"));
+                .findById(currentUserId)
+                .orElseThrow(() -> new BadRequestException("User with id=" + currentUserId + " not found"));
         knowledgeTest.setTeacher(teacher);
 
         knowledgeTestRepository.save(knowledgeTest);
@@ -87,38 +94,44 @@ public class KnowledgeTestService {
         if(optionalTest.isPresent()) {
             KnowledgeTest test = optionalTest.get();
 
-            // Check if 'name' is given
-            if(dto.getName() != null) {
-                test.setName(dto.getName());
+            // Get current user ID
+            Long currentUserId = userService.getCurrentUserId();
+
+            // Check if current user has ADMIN role
+            boolean isAdmin = userService.hasRole(UserRole.ADMIN);
+
+            // Only ADMIN or user who created a test can update it
+            if(test.getTeacher().getId().equals(currentUserId) || isAdmin) {
+                // Check if 'name' is given
+                if(dto.getName() != null) {
+                    test.setName(dto.getName());
+                }
+                // Check if 'category' is given
+                if(dto.getCategory() != null) {
+                    test.setCategoryName(dto.getCategory());
+                }
+                // Check if 'testDate' is given
+                if(dto.getTestDate() != null) {
+                    test.setTestDate(dto.getTestDate());
+                }
+                // Check if 'classId' is given
+                if(dto.getClassId() != null) {
+                    SchoolClass updatedClass = classRepository
+                            .findById(dto.getClassId())
+                            .orElseThrow(() -> new BadRequestException("School class with id=" + dto.getClassId() + " not found"));
+                    test.setSchoolClass(updatedClass);
+                }
+                // Check if 'subjectId' is given
+                if(dto.getSubjectId() != null) {
+                    Subject updatedSubject = subjectRepository
+                            .findById(dto.getSubjectId())
+                            .orElseThrow(() -> new BadRequestException("Subject with id=" + dto.getSubjectId() + " not found"));
+                    test.setSubject(updatedSubject);
+                }
+                knowledgeTestRepository.save(test);
+            } else {
+                throw new UnauthorizedException("You are not authorized to update knowledge test that you did not create");
             }
-            // Check if 'category' is given
-            if(dto.getCategory() != null) {
-                test.setCategoryName(dto.getCategory());
-            }
-            // Check if 'testDate' is given
-            if(dto.getTestDate() != null) {
-                test.setTestDate(dto.getTestDate());
-            }
-            // Check if 'classId' is given
-            if(dto.getClassId() != null) {
-                SchoolClass updatedClass = classRepository
-                        .findById(dto.getClassId())
-                        .orElseThrow(() -> new BadRequestException("School class with id=" + dto.getClassId() + " not found"));
-                test.setSchoolClass(updatedClass);
-            }
-            if(dto.getSubjectId() != null) {
-                Subject updatedSubject = subjectRepository
-                        .findById(dto.getSubjectId())
-                        .orElseThrow(() -> new BadRequestException("Subject with id=" + dto.getSubjectId() + " not found"));
-                test.setSubject(updatedSubject);
-            }
-            if(dto.getTeacherId() != null) {
-                User updatedTeacher = userRepository
-                        .findById(dto.getTeacherId())
-                        .orElseThrow(() -> new BadRequestException("User with id=" + dto.getTeacherId() + " not found"));
-                test.setTeacher(updatedTeacher);
-            }
-            knowledgeTestRepository.save(test);
         } else {
             throw new ResourceNotFoundException("Knowledge test with id=" + id + " not found");
         }
@@ -126,10 +139,21 @@ public class KnowledgeTestService {
 
     // Delete a knowledge test with given ID
     public void deleteKnowledgeTest(Long id) {
-        if(knowledgeTestRepository.existsById(id)) {
-            knowledgeTestRepository.deleteById(id);
-        } else {
-            throw new ResourceNotFoundException("Knowledge test with id=" + id + " not found");
+        // Check if test exists with given ID
+        KnowledgeTest test = knowledgeTestRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Knowledge test with id=" + id + " not found"));
+
+        // Get current user ID
+        Long currentUserId = userService.getCurrentUserId();
+
+        // Check if user has ADMIN role
+        boolean isAdmin = userService.hasRole(UserRole.ADMIN);
+
+        // Only ADMIN or user who created test can delete it
+        if(!test.getTeacher().getId().equals(currentUserId) && !isAdmin) {
+            throw new UnauthorizedException("You are not authorized to delete this knowledge test");
         }
+
+        knowledgeTestRepository.deleteById(id);
     }
 }

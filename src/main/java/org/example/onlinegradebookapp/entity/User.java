@@ -57,9 +57,9 @@ public class User {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @ManyToOne
+    @OneToOne
+    @JoinColumn(name = "class_id", referencedColumnName = "id")
     @JsonBackReference
-    @JoinColumn(name = "class_id")
     private SchoolClass schoolClass;
 
     @ManyToMany
