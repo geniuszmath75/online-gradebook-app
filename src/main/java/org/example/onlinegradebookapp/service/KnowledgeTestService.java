@@ -154,6 +154,6 @@ public class KnowledgeTestService {
             throw new UnauthorizedException("You are not authorized to delete this knowledge test");
         }
 
-        knowledgeTestRepository.delete(test);
+        knowledgeTestRepository.deleteById(id);
     }
 }
