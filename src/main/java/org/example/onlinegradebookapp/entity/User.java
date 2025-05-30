@@ -57,12 +57,12 @@ public class User {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @OneToOne
-    @JoinColumn(name = "class_id", referencedColumnName = "id")
+    @OneToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "class_id")
     @JsonBackReference
     private SchoolClass schoolClass;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JsonBackReference
     @JoinTable(
             name = "teachers_subjects",

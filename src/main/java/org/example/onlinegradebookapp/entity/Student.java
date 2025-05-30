@@ -48,7 +48,7 @@ public class Student {
     @JoinColumn(name = "class_id")
     private SchoolClass schoolClass;
 
-    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Grade> grades = new ArrayList<>();
 }
