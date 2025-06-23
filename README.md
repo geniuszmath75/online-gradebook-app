@@ -87,10 +87,23 @@ Supports different roles of users (ADMIN, TEACHER) and access control based on r
 1. Build and run docker container
 
    ```shell
+   # Clone repository
    git clone https://github.com/geniuszmath75/online-gradebook-app.git
+   
+   # Go to app directory
    cd online-gradebook-app
+   
+   # Install JDK (if not installed)
+   sudo apt update
+   sudo apt install openjdk-17-jdk
+   
+   # Build project
    ./mvnw clean package -DskipTests
+   
+   # Build app and db images
    docker-compose build
+   
+   # Run containers
    docker-compose up
    ```
    
