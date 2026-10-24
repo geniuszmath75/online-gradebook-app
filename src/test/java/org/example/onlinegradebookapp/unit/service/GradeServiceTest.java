@@ -19,6 +19,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -47,13 +51,16 @@ public class GradeServiceTest {
     }
 
     @Test
-    void findAllGrades_shouldReturnList() {
+    void findAllGrades_shouldReturnPage() {
         Grade g1 = new Grade(); Grade g2 = new Grade();
-        when(gradeRepository.findAll()).thenReturn(List.of(g1, g2));
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Grade> page = new PageImpl<>(List.of(g1, g2), pageable, 2);
+        when(gradeRepository.findAll(pageable)).thenReturn(page);
 
-        List<Grade> result = gradeService.findAllGrades();
+        Page<Grade> result = gradeService.findAllGrades(pageable);
 
-        assertEquals(2, result.size());
+        assertEquals(2, result.getContent().size());
+        assertEquals(2, result.getTotalElements());
     }
 
     @Test

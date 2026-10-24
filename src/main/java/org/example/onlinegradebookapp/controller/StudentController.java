@@ -12,13 +12,14 @@ import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.StudentUpdateDto;
 import org.example.onlinegradebookapp.service.StudentService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/students")
@@ -33,9 +34,10 @@ public class StudentController {
     @GetMapping
     @PreAuthorize(value = "hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Get all students",
-            description = "Get a list of all students from the database")
-    public ResponseEntity<?> getAllStudents() {
-        List<Student> students = studentService.findAllStudents();
+            description = "Get a paginated list of students (query params: page, size, sort)")
+    public ResponseEntity<Page<Student>> getAllStudents(
+            @PageableDefault(sort = "id") Pageable pageable) {
+        Page<Student> students = studentService.findAllStudents(pageable);
         return new ResponseEntity<>(students, HttpStatus.OK);
     }
 

@@ -12,9 +12,10 @@ import org.example.onlinegradebookapp.payload.request.GradeUpdateDto;
 import org.example.onlinegradebookapp.repository.GradeRepository;
 import org.example.onlinegradebookapp.repository.KnowledgeTestRepository;
 import org.example.onlinegradebookapp.repository.StudentRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -33,9 +34,9 @@ public class GradeService {
         this.userService = userService;
     }
 
-    // Finds all students' grades
-    public List<Grade> findAllGrades() {
-        return gradeRepository.findAll();
+    // Finds students' grades with pagination
+    public Page<Grade> findAllGrades(Pageable pageable) {
+        return gradeRepository.findAll(pageable);
     }
 
     // Finds a grade with given ID

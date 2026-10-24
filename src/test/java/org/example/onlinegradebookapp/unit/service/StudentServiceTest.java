@@ -13,6 +13,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -72,12 +76,15 @@ public class StudentServiceTest {
     }
 
     @Test
-    void findAllStudents_shouldReturnList() {
+    void findAllStudents_shouldReturnPage() {
         List<Student> list = List.of(new Student(), new Student());
-        when(studentRepository.findAll()).thenReturn(list);
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Student> page = new PageImpl<>(list, pageable, list.size());
+        when(studentRepository.findAll(pageable)).thenReturn(page);
 
-        List<Student> result = studentService.findAllStudents();
-        assertEquals(2, result.size());
+        Page<Student> result = studentService.findAllStudents(pageable);
+        assertEquals(2, result.getContent().size());
+        assertEquals(2, result.getTotalElements());
     }
 
     @Test

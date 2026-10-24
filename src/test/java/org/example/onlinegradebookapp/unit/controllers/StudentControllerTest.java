@@ -8,6 +8,10 @@ import org.example.onlinegradebookapp.service.StudentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -32,15 +36,17 @@ public class StudentControllerTest {
     }
 
     @Test
-    void getAllStudents_shouldReturnListAndOk() {
+    void getAllStudents_shouldReturnPageAndOk() {
         List<Student> students = Arrays.asList(new Student(), new Student());
-        when(studentService.findAllStudents()).thenReturn(students);
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Student> page = new PageImpl<>(students, pageable, students.size());
+        when(studentService.findAllStudents(pageable)).thenReturn(page);
 
-        ResponseEntity<?> response = studentController.getAllStudents();
+        ResponseEntity<Page<Student>> response = studentController.getAllStudents(pageable);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(students, response.getBody());
-        verify(studentService, times(1)).findAllStudents();
+        assertEquals(page, response.getBody());
+        verify(studentService, times(1)).findAllStudents(pageable);
     }
 
     @Test

@@ -13,13 +13,14 @@ import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.GradeDto;
 import org.example.onlinegradebookapp.payload.request.GradeUpdateDto;
 import org.example.onlinegradebookapp.service.GradeService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/grades")
@@ -33,9 +34,10 @@ public class GradeController {
 
     @GetMapping
     @Operation(summary = "Get all student grades",
-            description = "Get a list of all student grades from the database")
-    public ResponseEntity<?> getAllGrades() {
-        List<Grade> grades = gradeService.findAllGrades();
+            description = "Get a paginated list of student grades (query params: page, size, sort)")
+    public ResponseEntity<Page<Grade>> getAllGrades(
+            @PageableDefault(sort = "id") Pageable pageable) {
+        Page<Grade> grades = gradeService.findAllGrades(pageable);
         return new ResponseEntity<>(grades, HttpStatus.OK);
     }
 

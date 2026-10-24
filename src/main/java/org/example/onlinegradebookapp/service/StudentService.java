@@ -8,10 +8,11 @@ import org.example.onlinegradebookapp.payload.request.StudentRegistrationDto;
 import org.example.onlinegradebookapp.payload.request.StudentUpdateDto;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
 import org.example.onlinegradebookapp.repository.StudentRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -48,9 +49,9 @@ public class StudentService {
         studentRepository.save(student);
     }
 
-    // Finds all students
-    public List<Student> findAllStudents() {
-        return studentRepository.findAll();
+    // Finds students with pagination
+    public Page<Student> findAllStudents(Pageable pageable) {
+        return studentRepository.findAll(pageable);
     }
 
     // Finds a student with given ID
