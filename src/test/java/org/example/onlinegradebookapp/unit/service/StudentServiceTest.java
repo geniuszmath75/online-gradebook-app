@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -80,11 +82,12 @@ public class StudentServiceTest {
         List<Student> list = List.of(new Student(), new Student());
         Pageable pageable = PageRequest.of(0, 20);
         Page<Student> page = new PageImpl<>(list, pageable, list.size());
-        when(studentRepository.findAll(pageable)).thenReturn(page);
+        when(studentRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        Page<Student> result = studentService.findAllStudents(pageable);
+        Page<Student> result = studentService.findAllStudents(1L, "student", pageable);
         assertEquals(2, result.getContent().size());
         assertEquals(2, result.getTotalElements());
+        verify(studentRepository).findAll(any(Specification.class), eq(pageable));
     }
 
     @Test

@@ -22,6 +22,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+
 @RestController
 @RequestMapping("/api/grades")
 @Tag(name = "Grades", description = "Operations for students grades")
@@ -34,10 +36,14 @@ public class GradeController {
 
     @GetMapping
     @Operation(summary = "Get all student grades",
-            description = "Get a paginated list of student grades (query params: page, size, sort)")
+            description = "Get a paginated list of grades. Optional filters: studentId, testId, createdFrom, createdTo (ISO-8601 Instant). Also: page, size, sort.")
     public ResponseEntity<Page<Grade>> getAllGrades(
+            @RequestParam(required = false) Long studentId,
+            @RequestParam(required = false) Long testId,
+            @RequestParam(required = false) Instant createdFrom,
+            @RequestParam(required = false) Instant createdTo,
             @PageableDefault(sort = "id") Pageable pageable) {
-        Page<Grade> grades = gradeService.findAllGrades(pageable);
+        Page<Grade> grades = gradeService.findAllGrades(studentId, testId, createdFrom, createdTo, pageable);
         return new ResponseEntity<>(grades, HttpStatus.OK);
     }
 

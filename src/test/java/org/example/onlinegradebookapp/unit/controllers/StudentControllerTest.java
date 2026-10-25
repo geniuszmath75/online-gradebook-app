@@ -40,13 +40,13 @@ public class StudentControllerTest {
         List<Student> students = Arrays.asList(new Student(), new Student());
         Pageable pageable = PageRequest.of(0, 20);
         Page<Student> page = new PageImpl<>(students, pageable, students.size());
-        when(studentService.findAllStudents(pageable)).thenReturn(page);
+        when(studentService.findAllStudents(1L, "gmail", pageable)).thenReturn(page);
 
-        ResponseEntity<Page<Student>> response = studentController.getAllStudents(pageable);
+        ResponseEntity<Page<Student>> response = studentController.getAllStudents(1L, "gmail", pageable);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(page, response.getBody());
-        verify(studentService, times(1)).findAllStudents(pageable);
+        verify(studentService, times(1)).findAllStudents(1L, "gmail", pageable);
     }
 
     @Test

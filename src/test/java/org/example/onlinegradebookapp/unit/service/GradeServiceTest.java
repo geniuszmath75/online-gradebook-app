@@ -23,15 +23,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 public class GradeServiceTest {
@@ -55,12 +59,24 @@ public class GradeServiceTest {
         Grade g1 = new Grade(); Grade g2 = new Grade();
         Pageable pageable = PageRequest.of(0, 20);
         Page<Grade> page = new PageImpl<>(List.of(g1, g2), pageable, 2);
-        when(gradeRepository.findAll(pageable)).thenReturn(page);
+        when(gradeRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        Page<Grade> result = gradeService.findAllGrades(pageable);
+        Page<Grade> result = gradeService.findAllGrades(1L, 2L, null, null, pageable);
 
         assertEquals(2, result.getContent().size());
         assertEquals(2, result.getTotalElements());
+        verify(gradeRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void findAllGrades_shouldThrowBadRequest_whenDateRangeInvalid() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Instant from = Instant.parse("2024-06-01T00:00:00Z");
+        Instant to = Instant.parse("2024-01-01T00:00:00Z");
+
+        assertThrows(BadRequestException.class,
+                () -> gradeService.findAllGrades(null, null, from, to, pageable));
+        verify(gradeRepository, never()).findAll(any(Specification.class), any(Pageable.class));
     }
 
     @Test

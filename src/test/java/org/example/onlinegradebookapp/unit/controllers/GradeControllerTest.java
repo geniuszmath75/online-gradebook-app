@@ -44,13 +44,13 @@ public class GradeControllerTest {
         List<Grade> grades = Arrays.asList(new Grade(), new Grade());
         Pageable pageable = PageRequest.of(0, 20);
         Page<Grade> page = new PageImpl<>(grades, pageable, grades.size());
-        when(gradeService.findAllGrades(pageable)).thenReturn(page);
+        when(gradeService.findAllGrades(1L, 2L, null, null, pageable)).thenReturn(page);
 
-        ResponseEntity<Page<Grade>> response = gradeController.getAllGrades(pageable);
+        ResponseEntity<Page<Grade>> response = gradeController.getAllGrades(1L, 2L, null, null, pageable);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(page, response.getBody());
-        verify(gradeService, times(1)).findAllGrades(pageable);
+        verify(gradeService, times(1)).findAllGrades(1L, 2L, null, null, pageable);
     }
 
     @Test

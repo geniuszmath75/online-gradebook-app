@@ -12,10 +12,12 @@ import org.example.onlinegradebookapp.payload.request.GradeUpdateDto;
 import org.example.onlinegradebookapp.repository.GradeRepository;
 import org.example.onlinegradebookapp.repository.KnowledgeTestRepository;
 import org.example.onlinegradebookapp.repository.StudentRepository;
+import org.example.onlinegradebookapp.specification.GradeSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -34,9 +36,17 @@ public class GradeService {
         this.userService = userService;
     }
 
-    // Finds students' grades with pagination
-    public Page<Grade> findAllGrades(Pageable pageable) {
-        return gradeRepository.findAll(pageable);
+    // Finds students' grades with optional filters and pagination
+    public Page<Grade> findAllGrades(Long studentId, Long testId,
+                                     Instant createdFrom, Instant createdTo,
+                                     Pageable pageable) {
+        if (createdFrom != null && createdTo != null && createdFrom.isAfter(createdTo)) {
+            throw new BadRequestException("'createdFrom' must be before or equal to 'createdTo'");
+        }
+        return gradeRepository.findAll(
+                GradeSpecifications.withFilters(studentId, testId, createdFrom, createdTo),
+                pageable
+        );
     }
 
     // Finds a grade with given ID

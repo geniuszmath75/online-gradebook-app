@@ -8,6 +8,7 @@ import org.example.onlinegradebookapp.payload.request.StudentRegistrationDto;
 import org.example.onlinegradebookapp.payload.request.StudentUpdateDto;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
 import org.example.onlinegradebookapp.repository.StudentRepository;
+import org.example.onlinegradebookapp.specification.StudentSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -49,9 +50,9 @@ public class StudentService {
         studentRepository.save(student);
     }
 
-    // Finds students with pagination
-    public Page<Student> findAllStudents(Pageable pageable) {
-        return studentRepository.findAll(pageable);
+    // Finds students with optional filters and pagination
+    public Page<Student> findAllStudents(Long classId, String email, Pageable pageable) {
+        return studentRepository.findAll(StudentSpecifications.withFilters(classId, email), pageable);
     }
 
     // Finds a student with given ID

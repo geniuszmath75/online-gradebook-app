@@ -34,10 +34,12 @@ public class StudentController {
     @GetMapping
     @PreAuthorize(value = "hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Get all students",
-            description = "Get a paginated list of students (query params: page, size, sort)")
+            description = "Get a paginated list of students. Optional filters: classId, email (substring). Also: page, size, sort.")
     public ResponseEntity<Page<Student>> getAllStudents(
+            @RequestParam(required = false) Long classId,
+            @RequestParam(required = false) String email,
             @PageableDefault(sort = "id") Pageable pageable) {
-        Page<Student> students = studentService.findAllStudents(pageable);
+        Page<Student> students = studentService.findAllStudents(classId, email, pageable);
         return new ResponseEntity<>(students, HttpStatus.OK);
     }
 

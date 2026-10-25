@@ -2,12 +2,13 @@ package org.example.onlinegradebookapp.repository;
 
 import org.example.onlinegradebookapp.entity.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface StudentRepository extends JpaRepository<Student, Long> {
+public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpecificationExecutor<Student> {
     // Find the student with given email
     Optional<Student> findByEmail(String email);
 
