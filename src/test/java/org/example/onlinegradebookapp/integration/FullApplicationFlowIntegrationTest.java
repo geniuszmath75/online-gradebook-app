@@ -1,61 +1,27 @@
 package org.example.onlinegradebookapp.integration;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.onlinegradebookapp.OnlineGradebookAppApplication;
 import org.example.onlinegradebookapp.entity.TestCategory.TestCategory;
 import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
-import org.example.onlinegradebookapp.payload.request.*;
-import org.example.onlinegradebookapp.repository.*;
-import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
+import org.example.onlinegradebookapp.payload.request.GradeUpdateDto;
+import org.example.onlinegradebookapp.payload.request.KnowledgeTestUpdateDto;
+import org.example.onlinegradebookapp.payload.request.SubjectDto;
+import org.example.onlinegradebookapp.payload.request.UserRegistrationDto;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
-@SpringBootTest(classes = OnlineGradebookAppApplication.class)
-@AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class FullApplicationFlowIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private StudentRepository studentRepository;
-
-    @Autowired
-    private SchoolClassRepository classRepository;
-
-    @Autowired
-    private SubjectRepository subjectRepository;
-
-    @Autowired
-    private KnowledgeTestRepository testRepository;
-
-    @Autowired
-    private GradeRepository gradeRepository;
+public class FullApplicationFlowIntegrationTest extends RestIntegrationTestSupport {
 
     private String adminToken;
     private String teacher1Token;
@@ -63,7 +29,6 @@ public class FullApplicationFlowIntegrationTest {
     private String student1Token;
     private String student2Token;
 
-    // reusable stored ID
     private Long class1AId, class1BId;
     private Long mathId, historyId, csId;
     private Long student1Id, student2Id;
@@ -126,26 +91,25 @@ public class FullApplicationFlowIntegrationTest {
         student2Id = studentRepository.findByEmail("student2@gmail.com").orElseThrow().getId();
 
         // 4. Creating school classes
-        createClass("1A");
+        createClass(adminToken, "1A");
         // Get class1A ID
         class1AId = classRepository.findByName("1A").orElseThrow().getId();
 
-        createClass("1B");
+        createClass(adminToken, "1B");
         // Get class1B ID
         class1BId = classRepository.findByName("1B").orElseThrow().getId();
 
         // 5. Creating subjects
-        createSubject("matematyka");
+        createSubject(adminToken, "matematyka");
 
         // Get math ID
         mathId = subjectRepository.findByName("matematyka").orElseThrow().getId();
 
-        createSubject("historia");
-
+        createSubject(adminToken, "historia");
         // Get history ID
         historyId = subjectRepository.findByName("historia").orElseThrow().getId();
 
-        createSubject("informatyka");
+        createSubject(adminToken, "informatyka");
 
         // Get computer science ID
         csId = subjectRepository.findByName("informatyka").orElseThrow().getId();
@@ -187,7 +151,7 @@ public class FullApplicationFlowIntegrationTest {
         KnowledgeTestUpdateDto updateTest = new KnowledgeTestUpdateDto();
         updateTest.setCategory(TestCategory.HOMEWORK);
         patchWithToken("/api/knowledge_tests/" + test1Id, teacher2Token, updateTest)
-            .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized());
 
         // 13. Teacher2 create grade for student2
         createGrade(teacher2Token, BigDecimal.valueOf(4.5), "Ok", student2Id, test2Id);
@@ -197,7 +161,7 @@ public class FullApplicationFlowIntegrationTest {
         GradeUpdateDto gradeUpdate = new GradeUpdateDto();
         gradeUpdate.setGrade(BigDecimal.valueOf(3.0));
         patchWithToken("/api/grades/" + grade1Id, teacher2Token, gradeUpdate)
-            .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized());
 
         // 15-17. Student1 i Student2 - checking access
         getWithToken("/api/students/" + student1Id, student1Token).andExpect(status().isOk());
@@ -240,113 +204,4 @@ public class FullApplicationFlowIntegrationTest {
         deleteWithToken("/api/subjects/" + mathId, adminToken).andExpect(status().isOk());
         deleteWithToken("/api/subjects/" + historyId, adminToken).andExpect(status().isOk());
     }
-
-    private String login(String email, String password) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\": \"" + email + "\", \"password\": \"" + password + "\"}"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        JsonNode node = objectMapper.readTree(result.getResponse().getContentAsString());
-        return node.get("token").asText();
-    }
-
-    private ResultActions postWithToken(String url, String token, Object body) throws Exception {
-        return mockMvc.perform(post(url)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(body)));
-    }
-
-    private ResultActions patchWithToken(String url, String token, Object body) throws Exception {
-        return mockMvc.perform(patch(url)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(body)));
-    }
-
-    private ResultActions getWithToken(String url, String token) throws Exception {
-        return mockMvc.perform(get(url)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token));
-    }
-
-    private ResultActions deleteWithToken(String url, String token) throws Exception {
-        return mockMvc.perform(delete(url)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token));
-    }
-
-    private ResultActions registerUser(String email, String password, String firstName, String lastName, UserRole role) throws Exception {
-        UserRegistrationDto dto = new UserRegistrationDto();
-        dto.setEmail(email);
-        dto.setPassword(password);
-        dto.setFirstName(firstName);
-        dto.setLastName(lastName);
-        dto.setRole(role);
-
-        return mockMvc.perform(post("/api/auth/register/user")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto)));
-    }
-
-    private ResultActions registerStudent(String email, String password, String firstName, String lastName) throws Exception {
-        StudentRegistrationDto dto = new StudentRegistrationDto();
-        dto.setEmail(email);
-        dto.setPassword(password);
-        dto.setFirstName(firstName);
-        dto.setLastName(lastName);
-
-        return mockMvc.perform(post("/api/auth/register/student")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto)));
-    }
-
-    private void createClass(String name) throws Exception {
-        postWithToken("/api/classes", adminToken, Map.of("name", name))
-                .andExpect(status().isCreated())
-                .andReturn();
-    }
-
-    private void createSubject(String name) throws Exception {
-        postWithToken("/api/subjects", adminToken, Map.of("name", name))
-                .andExpect(status().isCreated())
-                .andReturn();
-    }
-
-    private void updateUserClass(String token, Long classId, Long userId) throws Exception {
-        patchWithToken("/api/users/" + userId, token, Map.of("classId", classId))
-                .andExpect(status().isOk());
-    }
-
-    private void updateUserSubjects(String token, List<SubjectDto> subjects, Long userId) throws Exception {
-        patchWithToken("/api/users/" + userId, token, Map.of("subjects", subjects))
-                .andExpect(status().isOk());
-    }
-
-    private void createTest(String token, String name, TestCategory category, LocalDate testDate, Long classId, Long subjectId) throws Exception {
-        KnowledgeTestDto dto = new KnowledgeTestDto();
-        dto.setName(name);
-        dto.setCategory(category);
-        dto.setTestDate(testDate);
-        dto.setClassId(classId);
-        dto.setSubjectId(subjectId);
-
-        postWithToken("/api/knowledge_tests", token, dto)
-                .andExpect(status().isCreated())
-                .andReturn();
-    }
-
-    private void createGrade(String token, BigDecimal gradeValue, String description, Long studentId, Long testId) throws Exception {
-        GradeDto dto = new GradeDto();
-        dto.setGrade(gradeValue);
-        dto.setDescription(description);
-        dto.setStudentId(studentId);
-        dto.setTestId(testId);
-
-        postWithToken("/api/grades", token, dto)
-                .andExpect(status().isCreated())
-                .andReturn();
-    }
-
-
 }
