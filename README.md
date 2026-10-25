@@ -51,31 +51,34 @@ Supports different roles of users (ADMIN, TEACHER) and access control based on r
 - Maven 3.4.4+
 - PostgresSQL
 
-#### DB configuration:
+#### Configuration:
 
-1. Create database and user:
+1. Copy environment template and set your own values (DB credentials + JWT secret):
+
+    ```shell
+    cp .env.example .env
+    # edit .env — replace all change-me placeholders
+    ```
+
+2. Create database and user (use the same credentials as in `.env`):
 
     ```sql
     CREATE DATABASE online_grade_book;
-    CREATE USER admin WITH PASSWORD 'Q@H6h@A7bzzhUEr';
+    CREATE USER admin WITH PASSWORD 'your-db-password';
     GRANT ALL PRIVILEGES ON DATABASE online_grade_book TO admin;
     ```
 
-2. `application.properties` configuration:
-
-    ```properties
-    spring.datasource.url=jdbc:postgresql://localhost:5432/online_grade_book
-    spring.datasource.username=admin
-    spring.datasource.password=Q@H6h@A7bzzhUEr
-    ```
-3. Run app:
+3. Export variables from `.env` (or set them in your IDE run configuration), then run:
 
     ```shell
     git clone https://github.com/geniuszmath75/online-gradebook-app.git
     cd online-gradebook-app
-   ./mvnw clean install
-   ./mvnw spring-boot:run
+    set -a && source .env && set +a
+    ./mvnw clean install
+    ./mvnw spring-boot:run
     ```
+
+`application.properties` reads `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, and `JWT_SECRET` from the environment.
 
 ### Option 2 - Docker
 
@@ -84,32 +87,24 @@ Supports different roles of users (ADMIN, TEACHER) and access control based on r
 - Docker
 - Docker Compose
 
-1. Build and run docker container
+1. Build and run containers
 
    ```shell
    # Clone repository
    git clone https://github.com/geniuszmath75/online-gradebook-app.git
-   
-   # Go to app directory
    cd online-gradebook-app
-   
-   # Install JDK (if not installed)
-   sudo apt update
-   sudo apt install openjdk-17-jdk
-   
-   # Build project
-   ./mvnw clean package -DskipTests
-   
-   # Build app and db images
-   docker-compose build
-   
-   # Run containers
-   docker-compose up
+
+   # Configure secrets (required)
+   cp .env.example .env
+   # edit .env — replace all change-me placeholders
+
+   # Build and run (Compose loads .env automatically)
+   docker compose up --build
    ```
-   
+
 **The application is available at: `http://localhost:8080/swagger-ui/index.html`**
 
-**In database is created default user with ADMIN role**
+**Flyway seeds a default ADMIN user**
 
 **ADMIN login details:**
 

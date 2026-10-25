@@ -1,11 +1,12 @@
 package org.example.onlinegradebookapp.security;
 
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.*;
-import org.springframework.stereotype.Service;
-import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
@@ -15,8 +16,11 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
-    // Secret key in Base64 format
-    private static final String JWT_SECRET = "d6tKZMHgcGE9M6g9sJER8JBXaimddV3R5dXn6nSBvQU3E5Amm7BWm9iNjnhKmAgR";
+    private final String jwtSecret;
+
+    public JwtService(@Value("${app.jwt.secret}") String jwtSecret) {
+        this.jwtSecret = jwtSecret;
+    }
 
     // Generate token JWT for user/student
     public String generateToken(CustomUserDetails userDetails) {
@@ -38,7 +42,7 @@ public class JwtService {
 
     // Return signing key from encoded secret value
     private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(JWT_SECRET);
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

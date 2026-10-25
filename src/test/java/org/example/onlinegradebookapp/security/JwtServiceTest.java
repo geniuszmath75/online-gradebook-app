@@ -16,7 +16,7 @@ public class JwtServiceTest {
 
     @BeforeEach
     public void setUp() {
-        jwtService = new JwtService();
+        jwtService = new JwtService("dGVzdC1qd3Qtc2VjcmV0LWtleS1hdC1sZWFzdC0zMi1ieXRlcyEh");
         userDetails = new CustomUserDetails(
                 1L,
                 "student@gmail.com",

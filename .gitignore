@@ -34,3 +34,8 @@ build/
 
 ### Cursor ###
 .cursor/
+
+### Environment / secrets ###
+.env
+.env.local
+.env.*.local
