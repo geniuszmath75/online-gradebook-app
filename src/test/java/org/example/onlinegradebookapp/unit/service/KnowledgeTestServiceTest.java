@@ -7,6 +7,7 @@ import org.example.onlinegradebookapp.entity.TestCategory.TestCategory;
 import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
+import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.exception.UnauthorizedException;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestDto;
@@ -110,7 +111,7 @@ public class KnowledgeTestServiceTest {
 
         when(testRepository.existsByName("Test 1")).thenReturn(true);
 
-        assertThrows(BadRequestException.class, () -> testService.addKnowledgeTest(dto));
+        assertThrows(ConflictException.class, () -> testService.addKnowledgeTest(dto));
     }
 
     @Test

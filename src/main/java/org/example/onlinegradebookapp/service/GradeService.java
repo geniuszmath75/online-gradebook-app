@@ -5,6 +5,7 @@ import org.example.onlinegradebookapp.entity.KnowledgeTest;
 import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
+import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.exception.UnauthorizedException;
 import org.example.onlinegradebookapp.payload.request.GradeDto;
@@ -61,7 +62,7 @@ public class GradeService {
         // Check if a student has already a grade for given test
         if(gradeRepository.existsGradeByStudentId(dto.getStudentId()) &&
         gradeRepository.existsGradeByTestId(dto.getTestId())) {
-            throw new BadRequestException("Student with id=" + dto.getStudentId() + " has already a grade for test with id=" + dto.getTestId());
+            throw new ConflictException("Student with id=" + dto.getStudentId() + " has already a grade for test with id=" + dto.getTestId());
         }
 
         Grade grade = new Grade();

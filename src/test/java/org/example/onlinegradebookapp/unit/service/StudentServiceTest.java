@@ -3,6 +3,7 @@ package org.example.onlinegradebookapp.unit.service;
 import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.exception.BadRequestException;
+import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.StudentRegistrationDto;
 import org.example.onlinegradebookapp.payload.request.StudentUpdateDto;
@@ -74,7 +75,7 @@ public class StudentServiceTest {
 
         when(studentRepository.existsByEmail(dto.getEmail())).thenReturn(true);
 
-        assertThrows(BadRequestException.class, () -> studentService.register(dto));
+        assertThrows(ConflictException.class, () -> studentService.register(dto));
     }
 
     @Test

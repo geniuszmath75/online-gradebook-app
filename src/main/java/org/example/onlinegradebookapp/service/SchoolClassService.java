@@ -1,7 +1,7 @@
 package org.example.onlinegradebookapp.service;
 
 import org.example.onlinegradebookapp.entity.SchoolClass;
-import org.example.onlinegradebookapp.exception.BadRequestException;
+import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.SchoolClassDto;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
@@ -33,7 +33,7 @@ public class SchoolClassService {
     // Add a new school class with request DTO
     public void addSchoolClass(SchoolClassDto dto) {
         if(schoolClassRepository.existsByName(dto.getName())) {
-            throw new BadRequestException("School class '" + dto.getName() + "' already exists");
+            throw new ConflictException("School class '" + dto.getName() + "' already exists");
         }
 
         SchoolClass schoolClass = new SchoolClass();

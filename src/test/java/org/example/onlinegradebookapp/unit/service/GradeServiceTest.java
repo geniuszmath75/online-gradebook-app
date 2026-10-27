@@ -6,6 +6,7 @@ import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
+import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.exception.UnauthorizedException;
 import org.example.onlinegradebookapp.payload.request.GradeDto;
@@ -142,7 +143,7 @@ public class GradeServiceTest {
         when(gradeRepository.existsGradeByStudentId(1L)).thenReturn(true);
         when(gradeRepository.existsGradeByTestId(2L)).thenReturn(true);
 
-        assertThrows(BadRequestException.class, () -> gradeService.addGrade(dto));
+        assertThrows(ConflictException.class, () -> gradeService.addGrade(dto));
     }
 
     @Test

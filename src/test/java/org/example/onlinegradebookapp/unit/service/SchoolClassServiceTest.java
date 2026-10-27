@@ -2,6 +2,7 @@ package org.example.onlinegradebookapp.unit.service;
 
 import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.exception.BadRequestException;
+import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.SchoolClassDto;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
@@ -82,7 +83,7 @@ public class SchoolClassServiceTest {
 
         when(classRepository.existsByName("1A")).thenReturn(true);
 
-        assertThrows(BadRequestException.class, () -> classService.addSchoolClass(dto));
+        assertThrows(ConflictException.class, () -> classService.addSchoolClass(dto));
         verify(classRepository, never()).save(any());
     }
 

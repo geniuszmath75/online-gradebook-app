@@ -52,7 +52,7 @@ public class GradeCrudBusinessRuleIntegrationTest extends RestIntegrationTestSup
 
         // Business rule: one grade per student + test
         createGradeRaw(teacherToken, BigDecimal.valueOf(5.0), "Duplicate", studentId, testId)
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isConflict());
 
         GradeUpdateDto updateDto = new GradeUpdateDto();
         updateDto.setGrade(BigDecimal.valueOf(5.0));

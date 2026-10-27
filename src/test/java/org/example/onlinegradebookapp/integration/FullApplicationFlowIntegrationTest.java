@@ -54,7 +54,7 @@ public class FullApplicationFlowIntegrationTest extends RestIntegrationTestSuppo
         duplicateAdmin.setRole(UserRole.ADMIN);
 
         postWithToken("/api/auth/register/user", adminToken, duplicateAdmin)
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isConflict());
 
         // 2. TEACHER registration
         registerUser("teacher1@gmail.com", "teacher123", "Jan", "Kowalski", UserRole.TEACHER)

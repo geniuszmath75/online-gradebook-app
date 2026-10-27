@@ -3,6 +3,7 @@ package org.example.onlinegradebookapp.service;
 import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.exception.BadRequestException;
+import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.StudentRegistrationDto;
 import org.example.onlinegradebookapp.payload.request.StudentUpdateDto;
@@ -32,7 +33,7 @@ public class StudentService {
     public void register(StudentRegistrationDto dto) {
         // Check if student with given email already exists
         if(studentRepository.existsByEmail(dto.getEmail())) {
-            throw new BadRequestException("Email '"+dto.getEmail()+"' already exists");
+            throw new ConflictException("Email '"+dto.getEmail()+"' already exists");
         }
 
         Student student = new Student();
@@ -66,7 +67,7 @@ public class StudentService {
     public void updateStudentAttributes(StudentUpdateDto dto, Long id) throws ResourceNotFoundException {
         // Check if student with given email already exists
         if(studentRepository.existsByEmail(dto.getEmail())) {
-            throw new BadRequestException("Email '"+dto.getEmail()+"' already exists");
+            throw new ConflictException("Email '"+dto.getEmail()+"' already exists");
         }
 
         // Find a student if exists in database

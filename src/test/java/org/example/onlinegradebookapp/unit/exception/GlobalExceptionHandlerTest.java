@@ -53,6 +53,20 @@ public class GlobalExceptionHandlerTest {
         assertThat(response.getBody().getMessage()).isEqualTo(message);
     }
 
+
+    @Test
+    void shouldReturnConflict_whenConflictException() {
+        String message = "Conflict";
+        ConflictException ex = new ConflictException(message);
+
+        ResponseEntity<ApiError> response = handler.handleConflict(ex);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(Objects.requireNonNull(response.getBody()).getStatus()).isEqualTo(409);
+        assertThat(response.getBody().getMessage()).isEqualTo(message);
+    }
+
     @Test
     void shouldReturnBadRequest_whenBadRequestException() {
         String message = "Bad request";

@@ -6,6 +6,7 @@ import org.example.onlinegradebookapp.entity.Subject;
 import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
+import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.exception.UnauthorizedException;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestDto;
@@ -53,7 +54,7 @@ public class KnowledgeTestService {
     // Add new knowledge test with request DTO
     public void addKnowledgeTest(KnowledgeTestDto dto) {
         if(knowledgeTestRepository.existsByName(dto.getName())) {
-            throw new BadRequestException("Knowledge test '" + dto.getName() + "' already exists");
+            throw new ConflictException("Knowledge test '" + dto.getName() + "' already exists");
         }
 
         KnowledgeTest knowledgeTest = new KnowledgeTest();

@@ -5,6 +5,7 @@ import org.example.onlinegradebookapp.entity.Subject;
 import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
+import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.SubjectDto;
 import org.example.onlinegradebookapp.payload.request.UserRegistrationDto;
@@ -99,7 +100,7 @@ public class UserServiceTest {
         when(userRepository.existsByEmail(dto.getEmail())).thenReturn(true);
 
         assertThatThrownBy(() -> userService.register(dto))
-                .isInstanceOf(BadRequestException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("already exists");
     }
 
@@ -116,7 +117,7 @@ public class UserServiceTest {
         when(userRepository.countByRole(UserRole.ADMIN)).thenReturn(1L);
 
         assertThatThrownBy(() -> userService.register(dto))
-                .isInstanceOf(BadRequestException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("only be one ADMIN");
     }
 
@@ -134,7 +135,7 @@ public class UserServiceTest {
     void register_shouldThrowException_whenEmailAlreadyExists() {
         when(userRepository.existsByEmail("test@gmail.com")).thenReturn(true);
 
-        assertThrows(BadRequestException.class, () -> userService.register(registrationDto));
+        assertThrows(ConflictException.class, () -> userService.register(registrationDto));
     }
 
     @Test
@@ -143,7 +144,7 @@ public class UserServiceTest {
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(userRepository.countByRole(UserRole.ADMIN)).thenReturn(1L);
 
-        assertThrows(BadRequestException.class, () -> userService.register(registrationDto));
+        assertThrows(ConflictException.class, () -> userService.register(registrationDto));
     }
 
     @Test
@@ -361,7 +362,7 @@ public class UserServiceTest {
         when(userRepository.existsByEmail(dto.getEmail())).thenReturn(true);
 
         assertThatThrownBy(() -> userService.updateUserAttributes(dto, userId))
-                .isInstanceOf(BadRequestException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("Email 'existing@gmail.com' already exists");
     }
 
@@ -380,7 +381,7 @@ public class UserServiceTest {
         when(userRepository.countByRole(UserRole.ADMIN)).thenReturn(1L);
 
         assertThatThrownBy(() -> userService.updateUserAttributes(dto, userId))
-                .isInstanceOf(BadRequestException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessage("There can only be one ADMIN user.");
     }
 

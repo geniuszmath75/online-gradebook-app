@@ -5,6 +5,7 @@ import org.example.onlinegradebookapp.entity.Subject;
 import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
+import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.SubjectDto;
 import org.example.onlinegradebookapp.payload.request.UserRegistrationDto;
@@ -40,13 +41,13 @@ public class UserService {
     public void register(UserRegistrationDto dto) {
         // Check if user with given email already exists in DB
         if(userRepository.existsByEmail(dto.getEmail())) {
-            throw new BadRequestException("Email '" + dto.getEmail() + "' already exists");
+            throw new ConflictException("Email '" + dto.getEmail() + "' already exists");
         }
         // Check if ADMIN role can be assigned
         if(dto.getRole().equals(UserRole.ADMIN)) {
             Long adminCount = userRepository.countByRole(UserRole.ADMIN);
             if(adminCount > 0) {
-                throw new BadRequestException("There can only be one ADMIN user.");
+                throw new ConflictException("There can only be one ADMIN user.");
             }
         }
 
@@ -89,7 +90,7 @@ public class UserService {
     public void updateUserAttributes(UserUpdateDto dto, Long id) throws ResourceNotFoundException {
         // Check if user with given email already exists
         if(userRepository.existsByEmail(dto.getEmail())) {
-            throw new BadRequestException("Email '"+dto.getEmail()+"' already exists");
+            throw new ConflictException("Email '"+dto.getEmail()+"' already exists");
         }
 
         // Find a user if exists in database
@@ -121,7 +122,7 @@ public class UserService {
                 if(dto.getRole().equals(UserRole.ADMIN)) {
                     Long adminCount = userRepository.countByRole(UserRole.ADMIN);
                     if(adminCount > 0) {
-                        throw new BadRequestException("There can only be one ADMIN user.");
+                        throw new ConflictException("There can only be one ADMIN user.");
                     }
                 }
                 updatedUser.setUserRole(dto.getRole());
