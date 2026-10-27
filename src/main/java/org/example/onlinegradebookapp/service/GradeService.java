@@ -4,6 +4,7 @@ import org.example.onlinegradebookapp.entity.Grade;
 import org.example.onlinegradebookapp.entity.KnowledgeTest;
 import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
+import org.example.onlinegradebookapp.event.GradeCreatedEvent;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
@@ -14,6 +15,7 @@ import org.example.onlinegradebookapp.repository.GradeRepository;
 import org.example.onlinegradebookapp.repository.KnowledgeTestRepository;
 import org.example.onlinegradebookapp.repository.StudentRepository;
 import org.example.onlinegradebookapp.specification.GradeSpecifications;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,14 +29,18 @@ public class GradeService {
     private final StudentRepository studentRepository;
     private final KnowledgeTestRepository knowledgeTestRepository;
     private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public GradeService(GradeRepository gradeRepository,
                         StudentRepository studentRepository,
-                        KnowledgeTestRepository knowledgeTestRepository, UserService userService) {
+                        KnowledgeTestRepository knowledgeTestRepository,
+                        UserService userService,
+                        ApplicationEventPublisher eventPublisher) {
         this.gradeRepository = gradeRepository;
         this.studentRepository = studentRepository;
         this.knowledgeTestRepository = knowledgeTestRepository;
         this.userService = userService;
+        this.eventPublisher = eventPublisher;
     }
 
     // Finds students' grades with optional filters and pagination
@@ -96,7 +102,14 @@ public class GradeService {
             throw new UnauthorizedException("You are not authorized to add grade to test that you did not create");
         }
 
-        gradeRepository.save(grade);
+        Grade saved = gradeRepository.save(grade);
+        eventPublisher.publishEvent(new GradeCreatedEvent(
+                saved.getId(),
+                saved.getStudent().getId(),
+                saved.getTest().getId(),
+                saved.getGrade(),
+                currentUserId
+        ));
     }
 
     // Update attributes of grade with given ID

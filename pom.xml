@@ -214,6 +214,8 @@
 						<include>**/security/**Test.java</include>
 						<include>**/unit/controllers/**Test.java</include>
 						<include>**/unit/exception/**Test.java</include>
+						<include>**/unit/event/**Test.java</include>
+						<include>**/unit/specification/**Test.java</include>
 					</includes>
 				</configuration>
 			</plugin>

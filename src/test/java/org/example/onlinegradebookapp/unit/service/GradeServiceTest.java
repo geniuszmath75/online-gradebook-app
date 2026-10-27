@@ -5,6 +5,7 @@ import org.example.onlinegradebookapp.entity.KnowledgeTest;
 import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
+import org.example.onlinegradebookapp.event.GradeCreatedEvent;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +47,7 @@ public class GradeServiceTest {
     private KnowledgeTestRepository testRepository;
     private GradeService gradeService;
     private UserService userService;
+    private ApplicationEventPublisher eventPublisher;
 
     @BeforeEach
     public void setUp() {
@@ -52,7 +55,8 @@ public class GradeServiceTest {
         studentRepository = Mockito.mock(StudentRepository.class);
         testRepository = Mockito.mock(KnowledgeTestRepository.class);
         userService = Mockito.mock(UserService.class);
-        gradeService = new GradeService(gradeRepository, studentRepository, testRepository, userService);
+        eventPublisher = Mockito.mock(ApplicationEventPublisher.class);
+        gradeService = new GradeService(gradeRepository, studentRepository, testRepository, userService, eventPublisher);
     }
 
     @Test
@@ -120,6 +124,11 @@ public class GradeServiceTest {
         when(testRepository.findById(2L)).thenReturn(Optional.of(test));
         when(userService.getCurrentUserId()).thenReturn(10L);
         when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
+        when(gradeRepository.save(any(Grade.class))).thenAnswer(invocation -> {
+            Grade g = invocation.getArgument(0);
+            g.setId(100L);
+            return g;
+        });
 
         gradeService.addGrade(dto);
 
@@ -130,6 +139,15 @@ public class GradeServiceTest {
         assertEquals(BigDecimal.valueOf(5.0), capturedGrade.getGrade());
         assertEquals(student, captor.getValue().getStudent());
         assertEquals(test, captor.getValue().getTest());
+
+        ArgumentCaptor<GradeCreatedEvent> eventCaptor = ArgumentCaptor.forClass(GradeCreatedEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        GradeCreatedEvent event = eventCaptor.getValue();
+        assertEquals(100L, event.gradeId());
+        assertEquals(1L, event.studentId());
+        assertEquals(2L, event.testId());
+        assertEquals(BigDecimal.valueOf(5.0), event.gradeValue());
+        assertEquals(10L, event.createdByUserId());
     }
 
 
