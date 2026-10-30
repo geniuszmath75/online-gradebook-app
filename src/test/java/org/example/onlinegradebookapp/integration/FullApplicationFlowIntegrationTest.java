@@ -38,9 +38,8 @@ public class FullApplicationFlowIntegrationTest extends RestIntegrationTestSuppo
 
     @BeforeAll
     void setUp() throws Exception {
-        registerUser("admin@gmail.com", "admin123", "Admin", "admin", UserRole.ADMIN)
-                .andExpect(status().isCreated());
-        adminToken = login("admin@gmail.com", "admin123");
+        // At most one ADMIN is allowed; reuse shared/seed admin when other ITs already created one
+        adminToken = ensureAdminToken();
     }
 
     @Test
