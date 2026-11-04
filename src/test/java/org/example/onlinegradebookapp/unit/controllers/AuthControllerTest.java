@@ -1,6 +1,8 @@
 package org.example.onlinegradebookapp.unit.controllers;
 
 import org.example.onlinegradebookapp.controller.AuthController;
+import org.example.onlinegradebookapp.entity.Student;
+import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.exception.UnauthorizedException;
 import org.example.onlinegradebookapp.payload.request.LoginDto;
 import org.example.onlinegradebookapp.payload.request.StudentRegistrationDto;
@@ -47,23 +49,29 @@ public class AuthControllerTest {
     @Test
     void registerUser_ReturnsCreatedStatus() {
         UserRegistrationDto dto = new UserRegistrationDto();
+        User created = new User();
+        created.setId(1L);
+        when(userService.register(dto)).thenReturn(created);
 
         ResponseEntity<?> response = authController.registerUser(dto);
 
         verify(userService).register(dto);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("User registered successfully", response.getBody());
+        assertEquals(created, response.getBody());
     }
 
     @Test
     void registerStudent_ReturnsCreatedStatus() {
         StudentRegistrationDto dto = new StudentRegistrationDto();
+        Student created = new Student();
+        created.setId(1L);
+        when(studentService.register(dto)).thenReturn(created);
 
         ResponseEntity<?> response = authController.registerStudent(dto);
 
         verify(studentService).register(dto);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("Student registered successfully", response.getBody());
+        assertEquals(created, response.getBody());
     }
 
     @Test

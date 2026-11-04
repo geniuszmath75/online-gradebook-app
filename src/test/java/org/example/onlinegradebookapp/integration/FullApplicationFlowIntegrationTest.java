@@ -1,7 +1,6 @@
 package org.example.onlinegradebookapp.integration;
 
 import org.example.onlinegradebookapp.entity.TestCategory.TestCategory;
-import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.payload.request.GradeUpdateDto;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestUpdateDto;
@@ -186,18 +185,7 @@ public class FullApplicationFlowIntegrationTest extends RestIntegrationTestSuppo
         deleteWithToken("/api/students/" + student1Id, adminToken).andExpect(status().isOk());
         deleteWithToken("/api/students/" + student2Id, adminToken).andExpect(status().isOk());
 
-        // Ensure that school class detached
-        User teacher1 = userRepository.findById(teacher1Id).orElseThrow();
-        teacher1.setSchoolClass(null);
-        userRepository.save(teacher1);
-
         deleteWithToken("/api/users/" + teacher1Id, adminToken).andExpect(status().isOk());
-
-        // Ensure that school class detached
-        User teacher2 = userRepository.findById(teacher2Id).orElseThrow();
-        teacher2.setSchoolClass(null);
-        userRepository.save(teacher2);
-
         deleteWithToken("/api/users/" + teacher2Id, adminToken).andExpect(status().isOk());
         deleteWithToken("/api/classes/" + class1AId, adminToken).andExpect(status().isOk());
         deleteWithToken("/api/subjects/" + mathId, adminToken).andExpect(status().isOk());

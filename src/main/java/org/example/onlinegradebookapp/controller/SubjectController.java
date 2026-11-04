@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.example.onlinegradebookapp.entity.Subject;
 import org.example.onlinegradebookapp.payload.request.SubjectDto;
+import org.example.onlinegradebookapp.payload.response.MessageResponse;
 import org.example.onlinegradebookapp.service.SubjectService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,7 @@ public class SubjectController {
     @GetMapping
     @Operation(summary = "Get all subjects",
             description = "Get a list of all subjects from the database")
-    public ResponseEntity<?> getAllSubjects() {
+    public ResponseEntity<List<Subject>> getAllSubjects() {
         List<Subject> subjects = subjectService.findAllSubjects();
         return new ResponseEntity<>(subjects, HttpStatus.OK);
     }
@@ -41,7 +42,7 @@ public class SubjectController {
             description = "Get a single subject with given ID",
             responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Subject.class)))})
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Subject ID")
-    public ResponseEntity<?> getSubjectById(@PathVariable Long id) {
+    public ResponseEntity<Subject> getSubjectById(@PathVariable Long id) {
         Subject subject = subjectService.findSubjectById(id);
         return new ResponseEntity<>(subject, HttpStatus.OK);
     }
@@ -50,9 +51,9 @@ public class SubjectController {
     @PreAuthorize(value = "hasRole('ADMIN')")
     @Operation(summary = "Create a new subject",
             description = "Create a new subject in database")
-    public ResponseEntity<?> createSubject(@Valid @RequestBody SubjectDto dto) {
-        subjectService.addSubject(dto);
-        return new ResponseEntity<>("Subject created successfully", HttpStatus.CREATED);
+    public ResponseEntity<Subject> createSubject(@Valid @RequestBody SubjectDto dto) {
+        Subject created = subjectService.addSubject(dto);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
@@ -60,9 +61,9 @@ public class SubjectController {
     @Operation(summary = "Update a single subject",
             description = "Update a single subject with given ID")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Subject ID")
-    public ResponseEntity<?> updateSubject(@PathVariable Long id, @Valid @RequestBody SubjectDto dto) {
-        subjectService.updateSubject(dto, id);
-        return new ResponseEntity<>("Subject updated successfully" ,HttpStatus.OK);
+    public ResponseEntity<Subject> updateSubject(@PathVariable Long id, @Valid @RequestBody SubjectDto dto) {
+        Subject updated = subjectService.updateSubject(dto, id);
+        return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
@@ -70,8 +71,8 @@ public class SubjectController {
     @Operation(summary = "Delete a subject",
             description = "Delete a subject by ID from database")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Subject ID")
-    public ResponseEntity<?> deleteSubject(@PathVariable Long id) {
+    public ResponseEntity<MessageResponse> deleteSubject(@PathVariable Long id) {
         subjectService.deleteSubject(id);
-        return new ResponseEntity<>("Subject deleted successfully" ,HttpStatus.OK);
+        return new ResponseEntity<>(new MessageResponse("Subject deleted successfully"), HttpStatus.OK);
     }
 }

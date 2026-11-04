@@ -33,7 +33,8 @@ public class Subject {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @ManyToMany(mappedBy = "subjects", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    // Inverse side — no cascade (avoids TransientObjectException when deleting a User)
+    @ManyToMany(mappedBy = "subjects")
     @JsonManagedReference
     private List<User> users = new ArrayList<>();
 

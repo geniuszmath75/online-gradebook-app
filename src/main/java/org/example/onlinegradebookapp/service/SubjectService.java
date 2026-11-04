@@ -31,7 +31,7 @@ public class SubjectService {
     }
 
     // Add a new subject with request DTO
-    public void addSubject(SubjectDto dto) {
+    public Subject addSubject(SubjectDto dto) {
         if(subjectRepository.existsByName(dto.getName())) {
             throw new ConflictException("Subject '" + dto.getName() + "' already exists");
         }
@@ -39,11 +39,11 @@ public class SubjectService {
         Subject subject = new Subject();
         subject.setName(dto.getName());
 
-        subjectRepository.save(subject);
+        return subjectRepository.save(subject);
     }
 
     // Update a subject with given ID
-    public void updateSubject(SubjectDto dto, Long id) throws ResourceNotFoundException {
+    public Subject updateSubject(SubjectDto dto, Long id) throws ResourceNotFoundException {
         Optional<Subject> optionalSubject = subjectRepository.findById(id);
 
         // If subject exists, update it
@@ -53,7 +53,7 @@ public class SubjectService {
             subject.setId(id);
             subject.setCreatedAt(optionalSubject.get().getCreatedAt());
             subject.setName(dto.getName());
-            subjectRepository.save(subject);
+            return subjectRepository.save(subject);
         } else {
             throw new ResourceNotFoundException("Subject with id=" + id + " not found");
         }

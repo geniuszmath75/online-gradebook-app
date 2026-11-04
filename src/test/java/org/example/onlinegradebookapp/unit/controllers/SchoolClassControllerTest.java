@@ -3,6 +3,7 @@ package org.example.onlinegradebookapp.unit.controllers;
 import org.example.onlinegradebookapp.controller.SchoolClassController;
 import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.payload.request.SchoolClassDto;
+import org.example.onlinegradebookapp.payload.response.MessageResponse;
 import org.example.onlinegradebookapp.service.SchoolClassService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,11 +55,15 @@ public class SchoolClassControllerTest {
     void createSchoolClass_shouldCallServiceAndReturnCreated() {
         SchoolClassDto dto = new SchoolClassDto();
         dto.setName("School Class");
+        SchoolClass created = new SchoolClass();
+        created.setId(1L);
+        created.setName("School Class");
+        when(classService.addSchoolClass(dto)).thenReturn(created);
 
         ResponseEntity<?> response = classController.createSchoolClass(dto);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("School class created successfully", response.getBody());
+        assertEquals(created, response.getBody());
         verify(classService, times(1)).addSchoolClass(dto);
     }
 
@@ -66,11 +71,15 @@ public class SchoolClassControllerTest {
     void updateSchoolClass_shouldCallServiceAndReturnOk() {
         SchoolClassDto dto = new SchoolClassDto();
         dto.setName("School Class");
+        SchoolClass updated = new SchoolClass();
+        updated.setId(1L);
+        updated.setName("School Class");
+        when(classService.updateSchoolClass(dto, 1L)).thenReturn(updated);
 
         ResponseEntity<?> response = classController.updateSchoolClass(1L, dto);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("School class updated successfully", response.getBody());
+        assertEquals(updated, response.getBody());
         verify(classService, times(1)).updateSchoolClass(dto, 1L);
     }
 
@@ -79,7 +88,7 @@ public class SchoolClassControllerTest {
         ResponseEntity<?> response = classController.deleteSchoolClass(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("School class deleted successfully", response.getBody());
+        assertEquals("School class deleted successfully", ((MessageResponse) response.getBody()).getMessage());
         verify(classService, times(1)).deleteSchoolClass(1L);
     }
 }

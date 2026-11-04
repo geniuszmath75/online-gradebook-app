@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.StudentUpdateDto;
+import org.example.onlinegradebookapp.payload.response.MessageResponse;
 import org.example.onlinegradebookapp.service.StudentService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,7 +50,7 @@ public class StudentController {
             description = "Get a single student with given ID",
             responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Student.class)))})
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Student ID")
-    public ResponseEntity<?> getStudentById(@PathVariable long id) {
+    public ResponseEntity<Student> getStudentById(@PathVariable long id) {
         Student student = studentService.findStudentById(id);
         return new ResponseEntity<>(student, HttpStatus.OK);
     }
@@ -59,13 +60,13 @@ public class StudentController {
     @Operation(summary = "Update attributes of the single student",
             description = "Update attributes of the single student with given ID")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Student ID")
-    public ResponseEntity<?> updateStudent(@PathVariable Long id, @Valid @RequestBody StudentUpdateDto dto,
+    public ResponseEntity<Student> updateStudent(@PathVariable Long id, @Valid @RequestBody StudentUpdateDto dto,
                                                  BindingResult bindingResult) {
         if(bindingResult.hasErrors()) {
             throw new BadRequestException(bindingResult.getAllErrors().get(0).getDefaultMessage());
         }
-        studentService.updateStudentAttributes(dto, id);
-        return new ResponseEntity<>("Student updated successfully" ,HttpStatus.OK);
+        Student updated = studentService.updateStudentAttributes(dto, id);
+        return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
@@ -73,8 +74,8 @@ public class StudentController {
     @Operation(summary = "Delete a student",
             description = "Delete a student by ID from database")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Student ID")
-    public ResponseEntity<?> deleteStudent(@PathVariable Long id) {
+    public ResponseEntity<MessageResponse> deleteStudent(@PathVariable Long id) {
         studentService.deleteStudent(id);
-        return new ResponseEntity<>("Student deleted successfully" ,HttpStatus.OK);
+        return new ResponseEntity<>(new MessageResponse("Student deleted successfully"), HttpStatus.OK);
     }
 }

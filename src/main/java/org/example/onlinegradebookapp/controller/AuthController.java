@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.example.onlinegradebookapp.entity.Student;
+import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.exception.UnauthorizedException;
 import org.example.onlinegradebookapp.payload.request.LoginDto;
 import org.example.onlinegradebookapp.payload.request.StudentRegistrationDto;
@@ -51,18 +53,17 @@ public class AuthController {
     @PostMapping("/register/user")
     @Operation(summary = "Register a new user(TEACHER)",
     description = "Create a new user in database")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegistrationDto dto) {
-        userService.register(dto);
-
-        return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
+    public ResponseEntity<User> registerUser(@Valid @RequestBody UserRegistrationDto dto) {
+        User created = userService.register(dto);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PostMapping("/register/student")
     @Operation(summary = "Register a new student",
             description = "Create a new student in database")
-    public ResponseEntity<?> registerStudent(@Valid @RequestBody StudentRegistrationDto dto) {
-        studentService.register(dto);
-        return new ResponseEntity<>("Student registered successfully", HttpStatus.CREATED);
+    public ResponseEntity<Student> registerStudent(@Valid @RequestBody StudentRegistrationDto dto) {
+        Student created = studentService.register(dto);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PostMapping("/login")

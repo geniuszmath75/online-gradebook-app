@@ -52,7 +52,7 @@ public class KnowledgeTestService {
     }
 
     // Add new knowledge test with request DTO
-    public void addKnowledgeTest(KnowledgeTestDto dto) {
+    public KnowledgeTest addKnowledgeTest(KnowledgeTestDto dto) {
         if(knowledgeTestRepository.existsByName(dto.getName())) {
             throw new ConflictException("Knowledge test '" + dto.getName() + "' already exists");
         }
@@ -83,11 +83,11 @@ public class KnowledgeTestService {
                 .orElseThrow(() -> new BadRequestException("User with id=" + currentUserId + " not found"));
         knowledgeTest.setTeacher(teacher);
 
-        knowledgeTestRepository.save(knowledgeTest);
+        return knowledgeTestRepository.save(knowledgeTest);
     }
 
     // Update attributes of knowledge test with given ID
-    public void updateKnowledgeTestAttributes(KnowledgeTestUpdateDto dto, Long id) throws ResourceNotFoundException {
+    public KnowledgeTest updateKnowledgeTestAttributes(KnowledgeTestUpdateDto dto, Long id) throws ResourceNotFoundException {
         // Find a knowledge test if exists in database
         Optional<KnowledgeTest> optionalTest = knowledgeTestRepository.findById(id);
 
@@ -129,7 +129,7 @@ public class KnowledgeTestService {
                             .orElseThrow(() -> new BadRequestException("Subject with id=" + dto.getSubjectId() + " not found"));
                     test.setSubject(updatedSubject);
                 }
-                knowledgeTestRepository.save(test);
+                return knowledgeTestRepository.save(test);
             } else {
                 throw new UnauthorizedException("You are not authorized to update knowledge test that you did not create");
             }

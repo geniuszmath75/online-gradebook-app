@@ -12,6 +12,7 @@ import org.example.onlinegradebookapp.entity.Grade;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.GradeDto;
 import org.example.onlinegradebookapp.payload.request.GradeUpdateDto;
+import org.example.onlinegradebookapp.payload.response.MessageResponse;
 import org.example.onlinegradebookapp.service.GradeService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,7 +53,7 @@ public class GradeController {
             description = "Get a single student grade with given ID",
     responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Grade.class)))})
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Grade ID")
-    public ResponseEntity<?> getGradeById(@PathVariable Long id) {
+    public ResponseEntity<Grade> getGradeById(@PathVariable Long id) {
         Grade grade = gradeService.findGradeById(id);
         return new ResponseEntity<>(grade, HttpStatus.OK);
     }
@@ -60,21 +61,21 @@ public class GradeController {
     @PostMapping
     @Operation(summary = "Create a new grade for a knowledge test",
     description = "Create a new grade in database")
-    public ResponseEntity<?> createGrade(@Valid @RequestBody GradeDto dto) {
-        gradeService.addGrade(dto);
-        return new ResponseEntity<>("Grade created successfully" ,HttpStatus.CREATED);
+    public ResponseEntity<Grade> createGrade(@Valid @RequestBody GradeDto dto) {
+        Grade created = gradeService.addGrade(dto);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")
     @Operation(summary = "Update attributes of the single grade",
     description = "Update attributes of the single grade with given ID")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Grade ID")
-    public ResponseEntity<?> updateGrade(@PathVariable Long id, @Valid @RequestBody GradeUpdateDto dto, BindingResult bindingResult) {
+    public ResponseEntity<Grade> updateGrade(@PathVariable Long id, @Valid @RequestBody GradeUpdateDto dto, BindingResult bindingResult) {
         if(bindingResult.hasErrors()) {
             throw new BadRequestException(bindingResult.getAllErrors().get(0).getDefaultMessage());
         }
-        gradeService.updateGradeAttributes(dto, id);
-        return new ResponseEntity<>("Grade updated successfully" ,HttpStatus.OK);
+        Grade updated = gradeService.updateGradeAttributes(dto, id);
+        return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
@@ -82,8 +83,8 @@ public class GradeController {
     @Operation(summary = "Delete a grade",
     description = "Delete a grade by ID from database")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Grade ID")
-    public ResponseEntity<?> deleteGrade(@PathVariable Long id) {
+    public ResponseEntity<MessageResponse> deleteGrade(@PathVariable Long id) {
         gradeService.deleteGrade(id);
-        return new ResponseEntity<>("Grade deleted successfully" ,HttpStatus.OK);
+        return new ResponseEntity<>(new MessageResponse("Grade deleted successfully"), HttpStatus.OK);
     }
 }

@@ -64,7 +64,7 @@ public class GradeService {
     }
 
     // Add a new grade with request DTO
-    public void addGrade(GradeDto dto) {
+    public Grade addGrade(GradeDto dto) {
         // Check if a student has already a grade for given test
         if(gradeRepository.existsGradeByStudentId(dto.getStudentId()) &&
         gradeRepository.existsGradeByTestId(dto.getTestId())) {
@@ -110,10 +110,11 @@ public class GradeService {
                 saved.getGrade(),
                 currentUserId
         ));
+        return saved;
     }
 
     // Update attributes of grade with given ID
-    public void updateGradeAttributes(GradeUpdateDto dto, Long id) throws ResourceNotFoundException {
+    public Grade updateGradeAttributes(GradeUpdateDto dto, Long id) throws ResourceNotFoundException {
         // Find a grade if exists in database
         Optional<Grade> optionalGrade = gradeRepository.findById(id);
 
@@ -151,7 +152,7 @@ public class GradeService {
                             .orElseThrow(() -> new BadRequestException("Knowledge test with id=" + dto.getTestId() + " not found"));
                     grade.setTest(updatedTest);
                 }
-                gradeRepository.save(grade);
+                return gradeRepository.save(grade);
             } else {
                 throw new UnauthorizedException("You are not authorized update the grade assigned to test that you did not create");
             }

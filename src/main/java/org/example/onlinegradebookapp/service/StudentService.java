@@ -30,7 +30,7 @@ public class StudentService {
     }
 
     // Registers a new student using data from the registration DTO
-    public void register(StudentRegistrationDto dto) {
+    public Student register(StudentRegistrationDto dto) {
         // Check if student with given email already exists
         if(studentRepository.existsByEmail(dto.getEmail())) {
             throw new ConflictException("Email '"+dto.getEmail()+"' already exists");
@@ -48,7 +48,7 @@ public class StudentService {
             student.setSchoolClass(schoolClass);
         }
 
-        studentRepository.save(student);
+        return studentRepository.save(student);
     }
 
     // Finds students with optional filters and pagination
@@ -64,7 +64,7 @@ public class StudentService {
     }
 
     // Update attributes of student with given ID
-    public void updateStudentAttributes(StudentUpdateDto dto, Long id) throws ResourceNotFoundException {
+    public Student updateStudentAttributes(StudentUpdateDto dto, Long id) throws ResourceNotFoundException {
         // Check if student with given email already exists
         if(studentRepository.existsByEmail(dto.getEmail())) {
             throw new ConflictException("Email '"+dto.getEmail()+"' already exists");
@@ -100,7 +100,7 @@ public class StudentService {
                         .orElseThrow(() -> new BadRequestException("School class with id=" + dto.getClassId() + " not found"));
                 student.setSchoolClass(updatedClass);
             }
-            studentRepository.save(student);
+            return studentRepository.save(student);
         } else {
             throw new ResourceNotFoundException("Student with id=" + id + " not found");
         }

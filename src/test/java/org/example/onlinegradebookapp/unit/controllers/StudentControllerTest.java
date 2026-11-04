@@ -4,6 +4,7 @@ import org.example.onlinegradebookapp.controller.StudentController;
 import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.StudentUpdateDto;
+import org.example.onlinegradebookapp.payload.response.MessageResponse;
 import org.example.onlinegradebookapp.service.StudentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,11 +75,14 @@ public class StudentControllerTest {
         dto.setLastName("UpdatedName");
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(false);
+        Student updated = new Student();
+        updated.setId(1L);
+        when(studentService.updateStudentAttributes(dto, 1L)).thenReturn(updated);
 
         ResponseEntity<?> response = studentController.updateStudent(1L, dto, bindingResult);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Student updated successfully", response.getBody());
+        assertEquals(updated, response.getBody());
         verify(studentService, times(1)).updateStudentAttributes(dto, 1L);
     }
 
@@ -104,7 +108,7 @@ public class StudentControllerTest {
         ResponseEntity<?> response = studentController.deleteStudent(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Student deleted successfully", response.getBody());
+        assertEquals("Student deleted successfully", ((MessageResponse) response.getBody()).getMessage());
         verify(studentService, times(1)).deleteStudent(1L);
     }
 }

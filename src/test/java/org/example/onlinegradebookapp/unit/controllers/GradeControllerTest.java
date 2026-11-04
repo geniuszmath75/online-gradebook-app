@@ -5,6 +5,7 @@ import org.example.onlinegradebookapp.entity.Grade;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.GradeDto;
 import org.example.onlinegradebookapp.payload.request.GradeUpdateDto;
+import org.example.onlinegradebookapp.payload.response.MessageResponse;
 import org.example.onlinegradebookapp.service.GradeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,11 +73,14 @@ public class GradeControllerTest {
         dto.setDescription("description");
         dto.setTestId(2L);
         dto.setStudentId(3L);
+        Grade created = new Grade();
+        created.setId(10L);
+        when(gradeService.addGrade(dto)).thenReturn(created);
 
         ResponseEntity<?> response = gradeController.createGrade(dto);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("Grade created successfully", response.getBody());
+        assertEquals(created, response.getBody());
         verify(gradeService, times(1)).addGrade(dto);
     }
 
@@ -88,11 +92,14 @@ public class GradeControllerTest {
         dto.setStudentId(3L);
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(false);
+        Grade updated = new Grade();
+        updated.setId(1L);
+        when(gradeService.updateGradeAttributes(dto, 1L)).thenReturn(updated);
 
         ResponseEntity<?> response = gradeController.updateGrade(1L, dto, bindingResult);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Grade updated successfully", response.getBody());
+        assertEquals(updated, response.getBody());
         verify(gradeService, times(1)).updateGradeAttributes(dto, 1L);
     }
 
@@ -118,7 +125,8 @@ public class GradeControllerTest {
         ResponseEntity<?> response = gradeController.deleteGrade(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Grade deleted successfully", response.getBody());
+        assertEquals(new MessageResponse("Grade deleted successfully").getMessage(),
+                ((MessageResponse) response.getBody()).getMessage());
         verify(gradeService, times(1)).deleteGrade(1L);
     }
 }

@@ -6,6 +6,7 @@ import org.example.onlinegradebookapp.entity.TestCategory.TestCategory;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestDto;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestUpdateDto;
+import org.example.onlinegradebookapp.payload.response.MessageResponse;
 import org.example.onlinegradebookapp.service.KnowledgeTestService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,11 +67,14 @@ public class KnowledgeTestControllerTest {
         dto.setCategory(TestCategory.CLASS_TEST);
         dto.setClassId(2L);
         dto.setSubjectId(3L);
+        KnowledgeTest created = new KnowledgeTest();
+        created.setId(1L);
+        when(testService.addKnowledgeTest(dto)).thenReturn(created);
 
         ResponseEntity<?> response = testController.createKnowledgeTest(dto);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("Knowledge test created successfully", response.getBody());
+        assertEquals(created, response.getBody());
         verify(testService, times(1)).addKnowledgeTest(dto);
     }
 
@@ -84,11 +88,14 @@ public class KnowledgeTestControllerTest {
         dto.setSubjectId(3L);
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(false);
+        KnowledgeTest updated = new KnowledgeTest();
+        updated.setId(1L);
+        when(testService.updateKnowledgeTestAttributes(dto, 1L)).thenReturn(updated);
 
         ResponseEntity<?> response = testController.updateKnowledgeTest(1L, dto, bindingResult);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Knowledge test updated successfully", response.getBody());
+        assertEquals(updated, response.getBody());
         verify(testService, times(1)).updateKnowledgeTestAttributes(dto, 1L);
     }
 
@@ -114,7 +121,7 @@ public class KnowledgeTestControllerTest {
         ResponseEntity<?> response = testController.deleteKnowledgeTest(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Knowledge test deleted successfully", response.getBody());
+        assertEquals("Knowledge test deleted successfully", ((MessageResponse) response.getBody()).getMessage());
         verify(testService, times(1)).deleteKnowledgeTest(1L);
     }
 }

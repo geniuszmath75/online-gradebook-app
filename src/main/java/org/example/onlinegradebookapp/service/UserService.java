@@ -1,5 +1,6 @@
 package org.example.onlinegradebookapp.service;
 
+import org.example.onlinegradebookapp.entity.KnowledgeTest;
 import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.entity.Subject;
 import org.example.onlinegradebookapp.entity.User;
@@ -10,6 +11,7 @@ import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.SubjectDto;
 import org.example.onlinegradebookapp.payload.request.UserRegistrationDto;
 import org.example.onlinegradebookapp.payload.request.UserUpdateDto;
+import org.example.onlinegradebookapp.repository.KnowledgeTestRepository;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
 import org.example.onlinegradebookapp.repository.SubjectRepository;
 import org.example.onlinegradebookapp.repository.UserRepository;
@@ -18,7 +20,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,16 +33,22 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final SchoolClassRepository classRepository;
     private final SubjectRepository subjectRepository;
+    private final KnowledgeTestRepository knowledgeTestRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, SchoolClassRepository classRepository, SubjectRepository subjectRepository) {
+    public UserService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       SchoolClassRepository classRepository,
+                       SubjectRepository subjectRepository,
+                       KnowledgeTestRepository knowledgeTestRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.classRepository = classRepository;
         this.subjectRepository = subjectRepository;
+        this.knowledgeTestRepository = knowledgeTestRepository;
     }
 
     // Registers a new user using data from the registration DTO
-    public void register(UserRegistrationDto dto) {
+    public User register(UserRegistrationDto dto) {
         // Check if user with given email already exists in DB
         if(userRepository.existsByEmail(dto.getEmail())) {
             throw new ConflictException("Email '" + dto.getEmail() + "' already exists");
@@ -71,7 +81,7 @@ public class UserService {
             List<Subject> subjects = findSubjectList(dto.getSubjects());
             user.setSubjects(subjects);
         }
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     // Finds all users
@@ -87,7 +97,7 @@ public class UserService {
     }
 
     // Update attributes of user with given ID
-    public void updateUserAttributes(UserUpdateDto dto, Long id) throws ResourceNotFoundException {
+    public User updateUserAttributes(UserUpdateDto dto, Long id) throws ResourceNotFoundException {
         // Check if user with given email already exists
         if(userRepository.existsByEmail(dto.getEmail())) {
             throw new ConflictException("Email '"+dto.getEmail()+"' already exists");
@@ -149,19 +159,39 @@ public class UserService {
                 List<Subject> updatedSubjects = findSubjectList(dto.getSubjects());
                 updatedUser.setSubjects(updatedSubjects);
             }
-            userRepository.save(updatedUser);
+            return userRepository.save(updatedUser);
         } else {
             throw new ResourceNotFoundException("User with id=" + id + " not found");
         }
     }
 
     // Delete a user with given ID
+    @Transactional
     public void deleteUser(Long id) {
-        if(userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-        } else {
-            throw new ResourceNotFoundException("User with id=" + id + " not found");
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id=" + id + " not found"));
+
+        // 1) Delete owned knowledge tests first (grades cascade from KnowledgeTest)
+        List<KnowledgeTest> ownedTests = new ArrayList<>(user.getTests());
+        if (!ownedTests.isEmpty()) {
+            knowledgeTestRepository.deleteAll(ownedTests);
+            user.getTests().clear();
         }
+
+        // 2) Break bidirectional OneToOne with school class (owning + inverse side)
+        SchoolClass schoolClass = user.getSchoolClass();
+        if (schoolClass != null) {
+            schoolClass.setTeacher(null);
+            user.setSchoolClass(null);
+        }
+
+        // 3) Break ManyToMany with subjects on both sides, then drop join rows
+        for (Subject subject : new ArrayList<>(user.getSubjects())) {
+            subject.getUsers().remove(user);
+        }
+        user.getSubjects().clear();
+
+        userRepository.delete(user);
     }
 
     // Find list of subjects

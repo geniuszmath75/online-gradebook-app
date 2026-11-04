@@ -5,6 +5,7 @@ import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.UserUpdateDto;
+import org.example.onlinegradebookapp.payload.response.MessageResponse;
 import org.example.onlinegradebookapp.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,11 +71,14 @@ public class UserControllerTest {
         dto.setPassword("updatedpassword");
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(false);
+        User updated = new User();
+        updated.setId(1L);
+        when(userService.updateUserAttributes(dto, 1L)).thenReturn(updated);
 
         ResponseEntity<?> response = userController.updateUser(1L, dto, bindingResult);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("User updated successfully", response.getBody());
+        assertEquals(updated, response.getBody());
         verify(userService, times(1)).updateUserAttributes(dto, 1L);
     }
 
@@ -100,7 +104,7 @@ public class UserControllerTest {
         ResponseEntity<?> response = userController.deleteUser(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("User deleted successfully", response.getBody());
+        assertEquals("User deleted successfully", ((MessageResponse) response.getBody()).getMessage());
         verify(userService, times(1)).deleteUser(1L);
     }
 }

@@ -3,6 +3,7 @@ package org.example.onlinegradebookapp.unit.controllers;
 import org.example.onlinegradebookapp.controller.SubjectController;
 import org.example.onlinegradebookapp.entity.Subject;
 import org.example.onlinegradebookapp.payload.request.SubjectDto;
+import org.example.onlinegradebookapp.payload.response.MessageResponse;
 import org.example.onlinegradebookapp.service.SubjectService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,11 +55,15 @@ public class SubjectControllerTest {
     void createSubject_shouldCallServiceAndReturnCreated() {
         SubjectDto dto = new SubjectDto();
         dto.setName("Subject");
+        Subject created = new Subject();
+        created.setId(1L);
+        created.setName("Subject");
+        when(subjectService.addSubject(dto)).thenReturn(created);
 
         ResponseEntity<?> response = subjectController.createSubject(dto);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("Subject created successfully", response.getBody());
+        assertEquals(created, response.getBody());
         verify(subjectService, times(1)).addSubject(dto);
     }
 
@@ -66,11 +71,15 @@ public class SubjectControllerTest {
     void updateSubject_shouldCallServiceAndReturnOk() {
         SubjectDto dto = new SubjectDto();
         dto.setName("Subject");
+        Subject updated = new Subject();
+        updated.setId(1L);
+        updated.setName("Subject");
+        when(subjectService.updateSubject(dto, 1L)).thenReturn(updated);
 
         ResponseEntity<?> response = subjectController.updateSubject(1L, dto);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Subject updated successfully", response.getBody());
+        assertEquals(updated, response.getBody());
         verify(subjectService, times(1)).updateSubject(dto, 1L);
     }
 
@@ -79,7 +88,7 @@ public class SubjectControllerTest {
         ResponseEntity<?> response = subjectController.deleteSubject(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Subject deleted successfully", response.getBody());
+        assertEquals("Subject deleted successfully", ((MessageResponse) response.getBody()).getMessage());
         verify(subjectService, times(1)).deleteSubject(1L);
     }
 }

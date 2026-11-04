@@ -33,6 +33,7 @@ public class User {
     private String email;
 
     @Column(nullable = false)
+    @JsonIgnore
     private String password;
 
     @Column(name = "firstname", nullable = false)
@@ -62,7 +63,8 @@ public class User {
     @JsonBackReference
     private SchoolClass schoolClass;
 
-    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    // No cascade: subjects are independent; only join rows are owned by this side
+    @ManyToMany
     @JsonBackReference
     @JoinTable(
             name = "teachers_subjects",
@@ -71,7 +73,8 @@ public class User {
     )
     private List<Subject> subjects = new ArrayList<>();
 
-    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
+    // Tests are deleted explicitly in UserService.deleteUser (CascadeType.REMOVE fights bidirectional graphs)
+    @OneToMany(mappedBy = "teacher")
     @JsonManagedReference
     private List<KnowledgeTest> tests = new ArrayList<>();
 

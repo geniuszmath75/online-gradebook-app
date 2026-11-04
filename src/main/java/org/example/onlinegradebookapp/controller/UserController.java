@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.UserUpdateDto;
+import org.example.onlinegradebookapp.payload.response.MessageResponse;
 import org.example.onlinegradebookapp.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,7 @@ public class UserController {
     @GetMapping
     @Operation(summary = "Get all users (teachers)",
             description = "Get a list of all users (teachers) from the database")
-    public ResponseEntity<?> getAllUsers() {
+    public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.findAllUsers();
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
@@ -44,7 +45,7 @@ public class UserController {
             description = "Get a single user (teacher) with given ID",
             responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = User.class)))})
     @Parameter(in = ParameterIn.PATH, name = "id", description = "User ID")
-    public ResponseEntity<?> getUserById(@PathVariable long id) {
+    public ResponseEntity<User> getUserById(@PathVariable long id) {
         User user = userService.findUserById(id);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
@@ -54,13 +55,13 @@ public class UserController {
     @Operation(summary = "Update attributes of the single user",
             description = "Update attributes of the single user with given ID")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "User ID")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDto dto,
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDto dto,
                                            BindingResult bindingResult) {
         if(bindingResult.hasErrors()) {
             throw new BadRequestException(bindingResult.getAllErrors().get(0).getDefaultMessage());
         }
-        userService.updateUserAttributes(dto, id);
-        return new ResponseEntity<>("User updated successfully" ,HttpStatus.OK);
+        User updated = userService.updateUserAttributes(dto, id);
+        return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
@@ -68,8 +69,8 @@ public class UserController {
     @Operation(summary = "Delete a user",
             description = "Delete a user by ID from database")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "User ID")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<MessageResponse> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return new ResponseEntity<>("User deleted successfully" ,HttpStatus.OK);
+        return new ResponseEntity<>(new MessageResponse("User deleted successfully"), HttpStatus.OK);
     }
 }

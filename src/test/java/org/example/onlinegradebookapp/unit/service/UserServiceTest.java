@@ -10,6 +10,7 @@ import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.SubjectDto;
 import org.example.onlinegradebookapp.payload.request.UserRegistrationDto;
 import org.example.onlinegradebookapp.payload.request.UserUpdateDto;
+import org.example.onlinegradebookapp.repository.KnowledgeTestRepository;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
 import org.example.onlinegradebookapp.repository.SubjectRepository;
 import org.example.onlinegradebookapp.repository.UserRepository;
@@ -36,6 +37,7 @@ public class UserServiceTest {
     private UserService userService;
     private SchoolClassRepository classRepository;
     private SubjectRepository subjectRepository;
+    private KnowledgeTestRepository knowledgeTestRepository;
     private PasswordEncoder passwordEncoder;
 
     private UserRegistrationDto registrationDto;
@@ -46,8 +48,9 @@ public class UserServiceTest {
         userRepository = Mockito.mock(UserRepository.class);
         classRepository = Mockito.mock(SchoolClassRepository.class);
         subjectRepository = Mockito.mock(SubjectRepository.class);
+        knowledgeTestRepository = Mockito.mock(KnowledgeTestRepository.class);
         passwordEncoder = Mockito.mock(PasswordEncoder.class);
-        userService = new UserService(userRepository, passwordEncoder, classRepository, subjectRepository);
+        userService = new UserService(userRepository, passwordEncoder, classRepository, subjectRepository, knowledgeTestRepository);
 
         registrationDto = new UserRegistrationDto();
         registrationDto.setEmail("test@gmail.com");
@@ -239,16 +242,31 @@ public class UserServiceTest {
 
     @Test
     void deleteUser_ShouldDelete_WhenExists() {
-        when(userRepository.existsById(1L)).thenReturn(true);
+        User user = new User();
+        user.setId(1L);
+        SchoolClass schoolClass = new SchoolClass();
+        schoolClass.setId(10L);
+        schoolClass.setTeacher(user);
+        user.setSchoolClass(schoolClass);
+        Subject subject = new Subject();
+        subject.setId(20L);
+        subject.getUsers().add(user);
+        user.getSubjects().add(subject);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         userService.deleteUser(1L);
 
-        verify(userRepository).deleteById(1L);
+        assertThat(user.getSchoolClass()).isNull();
+        assertThat(schoolClass.getTeacher()).isNull();
+        assertThat(user.getSubjects()).isEmpty();
+        assertThat(subject.getUsers()).doesNotContain(user);
+        verify(knowledgeTestRepository, never()).deleteAll(anyList());
+        verify(userRepository).delete(user);
     }
 
     @Test
     void deleteUser_ShouldThrow_WhenNotFound() {
-        when(userRepository.existsById(2L)).thenReturn(false);
+        when(userRepository.findById(2L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.deleteUser(2L))
                 .isInstanceOf(ResourceNotFoundException.class)

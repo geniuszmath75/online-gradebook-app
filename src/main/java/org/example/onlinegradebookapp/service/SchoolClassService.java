@@ -31,7 +31,7 @@ public class SchoolClassService {
     }
 
     // Add a new school class with request DTO
-    public void addSchoolClass(SchoolClassDto dto) {
+    public SchoolClass addSchoolClass(SchoolClassDto dto) {
         if(schoolClassRepository.existsByName(dto.getName())) {
             throw new ConflictException("School class '" + dto.getName() + "' already exists");
         }
@@ -39,11 +39,11 @@ public class SchoolClassService {
         SchoolClass schoolClass = new SchoolClass();
         schoolClass.setName(dto.getName());
 
-        schoolClassRepository.save(schoolClass);
+        return schoolClassRepository.save(schoolClass);
     }
 
     // Update a school class with given ID
-    public void updateSchoolClass(SchoolClassDto dto, Long id) throws ResourceNotFoundException {
+    public SchoolClass updateSchoolClass(SchoolClassDto dto, Long id) throws ResourceNotFoundException {
         Optional<SchoolClass> optionalSchoolClass = schoolClassRepository.findById(id);
 
         // If school class exists, update it
@@ -53,7 +53,7 @@ public class SchoolClassService {
             schoolClass.setId(id);
             schoolClass.setCreatedAt(optionalSchoolClass.get().getCreatedAt());
             schoolClass.setName(dto.getName());
-            schoolClassRepository.save(schoolClass);
+            return schoolClassRepository.save(schoolClass);
         } else {
             throw new ResourceNotFoundException("School class with id=" + id + " not found");
         }
