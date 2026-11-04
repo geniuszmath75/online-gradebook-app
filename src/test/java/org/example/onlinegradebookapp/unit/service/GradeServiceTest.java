@@ -311,4 +311,133 @@ public class GradeServiceTest {
 
         assertThrows(UnauthorizedException.class, () -> gradeService.deleteGrade(1L));
     }
+
+    @Test
+    void addGrade_shouldSetDescription_whenProvided() {
+        GradeDto dto = new GradeDto();
+        dto.setStudentId(1L);
+        dto.setTestId(2L);
+        dto.setGrade(BigDecimal.valueOf(4.0));
+        dto.setDescription("Nice work");
+
+        Student student = new Student();
+        student.setId(1L);
+        KnowledgeTest test = new KnowledgeTest();
+        test.setId(2L);
+        User teacher = new User();
+        teacher.setId(10L);
+        test.setTeacher(teacher);
+
+        when(gradeRepository.existsGradeByStudentId(1L)).thenReturn(false);
+        when(gradeRepository.existsGradeByTestId(2L)).thenReturn(false);
+        when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
+        when(testRepository.findById(2L)).thenReturn(Optional.of(test));
+        when(userService.getCurrentUserId()).thenReturn(10L);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
+        when(gradeRepository.save(any(Grade.class))).thenAnswer(inv -> {
+            Grade g = inv.getArgument(0);
+            g.setId(7L);
+            return g;
+        });
+
+        Grade saved = gradeService.addGrade(dto);
+
+        assertEquals("Nice work", saved.getDescription());
+    }
+
+    @Test
+    void updateGradeAttributes_shouldUpdateDescriptionStudentAndTest_whenAuthorized() {
+        GradeUpdateDto dto = new GradeUpdateDto();
+        dto.setDescription("Updated note");
+        dto.setStudentId(3L);
+        dto.setTestId(4L);
+
+        Grade grade = new Grade();
+        grade.setId(1L);
+        KnowledgeTest originalTest = new KnowledgeTest();
+        User teacher = new User();
+        teacher.setId(11L);
+        originalTest.setTeacher(teacher);
+        grade.setTest(originalTest);
+
+        Student newStudent = new Student();
+        newStudent.setId(3L);
+        KnowledgeTest newTest = new KnowledgeTest();
+        newTest.setId(4L);
+
+        when(gradeRepository.findById(1L)).thenReturn(Optional.of(grade));
+        when(userService.getCurrentUserId()).thenReturn(11L);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
+        when(studentRepository.findById(3L)).thenReturn(Optional.of(newStudent));
+        when(testRepository.findById(4L)).thenReturn(Optional.of(newTest));
+        when(gradeRepository.save(any(Grade.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Grade updated = gradeService.updateGradeAttributes(dto, 1L);
+
+        assertEquals("Updated note", updated.getDescription());
+        assertEquals(newStudent, updated.getStudent());
+        assertEquals(newTest, updated.getTest());
+    }
+
+    @Test
+    void updateGradeAttributes_shouldThrow_whenStudentNotFound() {
+        GradeUpdateDto dto = new GradeUpdateDto();
+        dto.setStudentId(99L);
+
+        Grade grade = new Grade();
+        KnowledgeTest test = new KnowledgeTest();
+        User teacher = new User();
+        teacher.setId(11L);
+        test.setTeacher(teacher);
+        grade.setTest(test);
+
+        when(gradeRepository.findById(1L)).thenReturn(Optional.of(grade));
+        when(userService.getCurrentUserId()).thenReturn(11L);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
+        when(studentRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(BadRequestException.class, () -> gradeService.updateGradeAttributes(dto, 1L));
+    }
+
+    @Test
+    void updateGradeAttributes_shouldThrow_whenTestNotFound() {
+        GradeUpdateDto dto = new GradeUpdateDto();
+        dto.setTestId(99L);
+
+        Grade grade = new Grade();
+        KnowledgeTest test = new KnowledgeTest();
+        User teacher = new User();
+        teacher.setId(11L);
+        test.setTeacher(teacher);
+        grade.setTest(test);
+
+        when(gradeRepository.findById(1L)).thenReturn(Optional.of(grade));
+        when(userService.getCurrentUserId()).thenReturn(11L);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
+        when(testRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(BadRequestException.class, () -> gradeService.updateGradeAttributes(dto, 1L));
+    }
+
+    @Test
+    void updateGradeAttributes_shouldAllowAdmin() {
+        GradeUpdateDto dto = new GradeUpdateDto();
+        dto.setGrade(BigDecimal.valueOf(5.0));
+
+        Grade grade = new Grade();
+        KnowledgeTest test = new KnowledgeTest();
+        User teacher = new User();
+        teacher.setId(100L);
+        test.setTeacher(teacher);
+        grade.setTest(test);
+
+        when(gradeRepository.findById(1L)).thenReturn(Optional.of(grade));
+        when(userService.getCurrentUserId()).thenReturn(1L);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(true);
+        when(gradeRepository.save(any(Grade.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Grade updated = gradeService.updateGradeAttributes(dto, 1L);
+
+        assertEquals(BigDecimal.valueOf(5.0), updated.getGrade());
+    }
 }

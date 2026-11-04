@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -76,6 +77,29 @@ public class StudentServiceTest {
         when(studentRepository.existsByEmail(dto.getEmail())).thenReturn(true);
 
         assertThrows(ConflictException.class, () -> studentService.register(dto));
+    }
+
+    @Test
+    void register_shouldAssignClass_whenClassIdProvided() {
+        StudentRegistrationDto dto = new StudentRegistrationDto();
+        dto.setEmail("student@gmail.com");
+        dto.setPassword("secret123");
+        dto.setFirstName("Jan");
+        dto.setLastName("Kowalski");
+        dto.setClassId(5L);
+
+        SchoolClass schoolClass = new SchoolClass();
+        schoolClass.setId(5L);
+
+        when(studentRepository.existsByEmail(dto.getEmail())).thenReturn(false);
+        when(passwordEncoder.encode(dto.getPassword())).thenReturn("encoded");
+        when(classRepository.findById(5L)).thenReturn(Optional.of(schoolClass));
+        when(studentRepository.save(any(Student.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Student saved = studentService.register(dto);
+
+        assertEquals(schoolClass, saved.getSchoolClass());
+        verify(classRepository).findById(5L);
     }
 
     @Test
@@ -169,5 +193,33 @@ public class StudentServiceTest {
         when(classRepository.findById(123L)).thenReturn(Optional.empty());
 
         assertThrows(BadRequestException.class, () -> studentService.updateStudentAttributes(dto, 1L));
+    }
+
+    @Test
+    void updateStudentAttributes_shouldThrow_whenEmailAlreadyExists() {
+        StudentUpdateDto dto = new StudentUpdateDto();
+        dto.setEmail("taken@gmail.com");
+
+        when(studentRepository.existsByEmail("taken@gmail.com")).thenReturn(true);
+
+        assertThrows(ConflictException.class, () -> studentService.updateStudentAttributes(dto, 1L));
+        verify(studentRepository, never()).findById(any());
+    }
+
+    @Test
+    void deleteStudent_shouldDelete_whenExists() {
+        when(studentRepository.existsById(1L)).thenReturn(true);
+
+        studentService.deleteStudent(1L);
+
+        verify(studentRepository).deleteById(1L);
+    }
+
+    @Test
+    void deleteStudent_shouldThrow_whenNotFound() {
+        when(studentRepository.existsById(1L)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class, () -> studentService.deleteStudent(1L));
+        verify(studentRepository, never()).deleteById(any());
     }
 }

@@ -1,5 +1,6 @@
 package org.example.onlinegradebookapp.unit.service;
 
+import org.example.onlinegradebookapp.entity.KnowledgeTest;
 import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.entity.Subject;
 import org.example.onlinegradebookapp.entity.User;
@@ -14,11 +15,17 @@ import org.example.onlinegradebookapp.repository.KnowledgeTestRepository;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
 import org.example.onlinegradebookapp.repository.SubjectRepository;
 import org.example.onlinegradebookapp.repository.UserRepository;
+import org.example.onlinegradebookapp.security.CustomUserDetails;
 import org.example.onlinegradebookapp.service.UserService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -51,6 +58,7 @@ public class UserServiceTest {
         knowledgeTestRepository = Mockito.mock(KnowledgeTestRepository.class);
         passwordEncoder = Mockito.mock(PasswordEncoder.class);
         userService = new UserService(userRepository, passwordEncoder, classRepository, subjectRepository, knowledgeTestRepository);
+        SecurityContextHolder.clearContext();
 
         registrationDto = new UserRegistrationDto();
         registrationDto.setEmail("test@gmail.com");
@@ -446,6 +454,80 @@ public class UserServiceTest {
         List<Subject> result = ReflectionTestUtils.invokeMethod(userService, "findSubjectList", List.of(dto));
 
         assertEquals(List.of(math), result);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void deleteUser_shouldDeleteOwnedTests_whenPresent() {
+        User user = new User();
+        user.setId(1L);
+        KnowledgeTest test = new KnowledgeTest();
+        test.setId(5L);
+        user.getTests().add(test);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        userService.deleteUser(1L);
+
+        verify(knowledgeTestRepository).deleteAll(List.of(test));
+        assertThat(user.getTests()).isEmpty();
+        verify(userRepository).delete(user);
+    }
+
+    @Test
+    void updateUserAttributes_shouldChangeRole_whenNotAdminConflict() {
+        User existing = new User();
+        existing.setId(1L);
+        existing.setUserRole(UserRole.TEACHER);
+
+        UserUpdateDto dto = new UserUpdateDto();
+        dto.setRole(UserRole.TEACHER);
+
+        when(userRepository.existsByEmail(any())).thenReturn(false);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        User updated = userService.updateUserAttributes(dto, 1L);
+
+        assertEquals(UserRole.TEACHER, updated.getRole());
+    }
+
+    @Test
+    void getCurrentUserId_shouldReturnPrincipalId() {
+        CustomUserDetails principal = mock(CustomUserDetails.class);
+        when(principal.getId()).thenReturn(42L);
+        Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        assertEquals(42L, userService.getCurrentUserId());
+    }
+
+    @Test
+    void hasRole_shouldReturnTrue_whenAuthorityMatches() {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "user",
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        assertThat(userService.hasRole(UserRole.ADMIN)).isTrue();
+        assertThat(userService.hasRole(UserRole.TEACHER)).isFalse();
+    }
+
+    @Test
+    void findSubjectList_shouldThrow_whenSubjectMissing() {
+        SubjectDto dto = new SubjectDto();
+        dto.setName("unknown");
+        when(subjectRepository.findByName("unknown")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                ReflectionTestUtils.invokeMethod(userService, "findSubjectList", List.of(dto)))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("unknown");
     }
 
 }

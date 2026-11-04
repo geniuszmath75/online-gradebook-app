@@ -185,4 +185,94 @@ public class KnowledgeTestServiceTest {
 
         assertThrows(UnauthorizedException.class, () -> testService.deleteKnowledgeTest(1L));
     }
+
+    @Test
+    void updateKnowledgeTestAttributes_shouldUpdateClassAndSubject_whenAuthorized() {
+        KnowledgeTestUpdateDto dto = new KnowledgeTestUpdateDto();
+        dto.setClassId(10L);
+        dto.setSubjectId(20L);
+
+        KnowledgeTest test = new KnowledgeTest();
+        User teacher = new User();
+        teacher.setId(1L);
+        test.setTeacher(teacher);
+
+        SchoolClass schoolClass = new SchoolClass();
+        schoolClass.setId(10L);
+        Subject subject = new Subject();
+        subject.setId(20L);
+
+        when(testRepository.findById(1L)).thenReturn(Optional.of(test));
+        when(userService.getCurrentUserId()).thenReturn(1L);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
+        when(classRepository.findById(10L)).thenReturn(Optional.of(schoolClass));
+        when(subjectRepository.findById(20L)).thenReturn(Optional.of(subject));
+        when(testRepository.save(any(KnowledgeTest.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        KnowledgeTest updated = testService.updateKnowledgeTestAttributes(dto, 1L);
+
+        assertEquals(schoolClass, updated.getSchoolClass());
+        assertEquals(subject, updated.getSubject());
+    }
+
+    @Test
+    void updateKnowledgeTestAttributes_shouldThrow_whenClassNotFound() {
+        KnowledgeTestUpdateDto dto = new KnowledgeTestUpdateDto();
+        dto.setClassId(10L);
+
+        KnowledgeTest test = new KnowledgeTest();
+        User teacher = new User();
+        teacher.setId(1L);
+        test.setTeacher(teacher);
+
+        when(testRepository.findById(1L)).thenReturn(Optional.of(test));
+        when(userService.getCurrentUserId()).thenReturn(1L);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
+        when(classRepository.findById(10L)).thenReturn(Optional.empty());
+
+        assertThrows(BadRequestException.class, () -> testService.updateKnowledgeTestAttributes(dto, 1L));
+    }
+
+    @Test
+    void updateKnowledgeTestAttributes_shouldThrow_whenSubjectNotFound() {
+        KnowledgeTestUpdateDto dto = new KnowledgeTestUpdateDto();
+        dto.setSubjectId(20L);
+
+        KnowledgeTest test = new KnowledgeTest();
+        User teacher = new User();
+        teacher.setId(1L);
+        test.setTeacher(teacher);
+
+        when(testRepository.findById(1L)).thenReturn(Optional.of(test));
+        when(userService.getCurrentUserId()).thenReturn(1L);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
+        when(subjectRepository.findById(20L)).thenReturn(Optional.empty());
+
+        assertThrows(BadRequestException.class, () -> testService.updateKnowledgeTestAttributes(dto, 1L));
+    }
+
+    @Test
+    void updateKnowledgeTestAttributes_shouldThrow_whenTestNotFound() {
+        when(testRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> testService.updateKnowledgeTestAttributes(new KnowledgeTestUpdateDto(), 1L));
+    }
+
+    @Test
+    void deleteKnowledgeTest_shouldAllowAdmin() {
+        KnowledgeTest test = new KnowledgeTest();
+        test.setId(1L);
+        User teacher = new User();
+        teacher.setId(2L);
+        test.setTeacher(teacher);
+
+        when(testRepository.findById(1L)).thenReturn(Optional.of(test));
+        when(userService.getCurrentUserId()).thenReturn(99L);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(true);
+
+        testService.deleteKnowledgeTest(1L);
+
+        verify(testRepository).deleteById(1L);
+    }
 }
