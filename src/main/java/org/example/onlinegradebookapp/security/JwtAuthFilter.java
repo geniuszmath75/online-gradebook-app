@@ -1,12 +1,11 @@
 package org.example.onlinegradebookapp.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.example.onlinegradebookapp.exception.ApiError;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.service.CustomUserDetailsService;
 import org.springframework.http.HttpStatus;
@@ -23,67 +22,59 @@ import java.io.IOException;
 public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final ApiErrorResponseWriter errorWriter;
 
-    public JwtAuthFilter(JwtService jwtService, CustomUserDetailsService userDetailsService) {
+    public JwtAuthFilter(JwtService jwtService,
+                         CustomUserDetailsService userDetailsService,
+                         ApiErrorResponseWriter errorWriter) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.errorWriter = errorWriter;
     }
 
-    // Filter used once per HTTP request
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
-        throws ServletException, IOException {
+            throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userEmail;
 
-        // No auth header or doesn't start with "Bearer "
+        // Missing / non-Bearer / empty token → continue unauthenticated; EntryPoint returns 401 ApiError
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extract token from header
-        jwt = authHeader.substring(7);
+        final String jwt = authHeader.substring(7).trim();
+        if (jwt.isEmpty()) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         try {
-            // Extract email from token
-            userEmail = jwtService.extractUsername(jwt);
+            final String userEmail = jwtService.extractUsername(jwt);
 
-            // Check if user/student hasn't authenticated yet
-            if(SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Load user/student data
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 CustomUserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
-                // Token validation
-                if(jwtService.isTokenValid(jwt, userDetails)) {
-                    // Create authorization token in Spring Security
+                if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    // Set authorization in security context
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
 
-            // Pass the request further in the filter chain
             filterChain.doFilter(request, response);
-        } catch(ExpiredJwtException | UsernameNotFoundException ex) {
-            // Return 401 error if token expired or email has changed
-            ObjectMapper mapper = new ObjectMapper();
-            ApiError error = new ApiError(HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
-            response.setStatus(HttpStatus.UNAUTHORIZED.value()); // Set status code
-            response.setContentType("application/json"); // Set content type
-            mapper.writeValue(response.getWriter(), error); // Set response body
-        } catch(ResourceNotFoundException ex) {
-            ObjectMapper mapper = new ObjectMapper();
-            ApiError error = new ApiError(HttpStatus.NOT_FOUND.value(), ex.getMessage());
-            response.setStatus(HttpStatus.NOT_FOUND.value());
-            response.setContentType("application/json");
-            mapper.writeValue(response.getWriter(), error);
+        } catch (ExpiredJwtException ex) {
+            errorWriter.write(response, HttpStatus.UNAUTHORIZED, "JWT expired");
+        } catch (JwtException | UsernameNotFoundException ex) {
+            String message = ex instanceof UsernameNotFoundException
+                    ? ex.getMessage()
+                    : "Invalid JWT token";
+            errorWriter.write(response, HttpStatus.UNAUTHORIZED, message);
+        } catch (ResourceNotFoundException ex) {
+            errorWriter.write(response, HttpStatus.NOT_FOUND, ex.getMessage());
         }
     }
 }
