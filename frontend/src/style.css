@@ -1,0 +1,33 @@
+:root {
+  color: #1f2a25;
+  background:
+    radial-gradient(circle at top left, #d7ebe1 0%, transparent 45%),
+    linear-gradient(160deg, #f3f7f4 0%, #e7eee9 55%, #dfe8e2 100%);
+  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+}
