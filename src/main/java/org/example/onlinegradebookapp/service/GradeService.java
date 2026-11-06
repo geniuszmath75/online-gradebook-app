@@ -65,10 +65,10 @@ public class GradeService {
 
     // Add a new grade with request DTO
     public Grade addGrade(GradeDto dto) {
-        // Check if a student has already a grade for given test
-        if(gradeRepository.existsGradeByStudentId(dto.getStudentId()) &&
-        gradeRepository.existsGradeByTestId(dto.getTestId())) {
-            throw new ConflictException("Student with id=" + dto.getStudentId() + " has already a grade for test with id=" + dto.getTestId());
+        // One grade per student+test pair
+        if (gradeRepository.existsByStudentIdAndTestId(dto.getStudentId(), dto.getTestId())) {
+            throw new ConflictException("Student with id=" + dto.getStudentId()
+                    + " has already a grade for test with id=" + dto.getTestId());
         }
 
         Grade grade = new Grade();

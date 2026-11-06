@@ -118,8 +118,7 @@ public class GradeServiceTest {
         test.setTeacher(teacher);
         test.setId(2L);
 
-        when(gradeRepository.existsGradeByStudentId(1L)).thenReturn(false);
-        when(gradeRepository.existsGradeByTestId(2L)).thenReturn(false);
+        when(gradeRepository.existsByStudentIdAndTestId(1L, 2L)).thenReturn(false);
         when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
         when(testRepository.findById(2L)).thenReturn(Optional.of(test));
         when(userService.getCurrentUserId()).thenReturn(10L);
@@ -158,10 +157,43 @@ public class GradeServiceTest {
         dto.setTestId(2L);
         dto.setGrade(BigDecimal.valueOf(4.5));
 
-        when(gradeRepository.existsGradeByStudentId(1L)).thenReturn(true);
-        when(gradeRepository.existsGradeByTestId(2L)).thenReturn(true);
+        when(gradeRepository.existsByStudentIdAndTestId(1L, 2L)).thenReturn(true);
 
         assertThrows(ConflictException.class, () -> gradeService.addGrade(dto));
+    }
+
+    @Test
+    void addGrade_shouldSave_whenStudentAndTestHaveOtherGradesButNotThisPair() {
+        GradeDto dto = new GradeDto();
+        dto.setStudentId(2L);
+        dto.setTestId(3L);
+        dto.setGrade(BigDecimal.valueOf(3.5));
+
+        Student student = new Student();
+        student.setId(2L);
+        KnowledgeTest test = new KnowledgeTest();
+        test.setId(3L);
+        User teacher = new User();
+        teacher.setId(10L);
+        test.setTeacher(teacher);
+
+        when(gradeRepository.existsByStudentIdAndTestId(2L, 3L)).thenReturn(false);
+        when(studentRepository.findById(2L)).thenReturn(Optional.of(student));
+        when(testRepository.findById(3L)).thenReturn(Optional.of(test));
+        when(userService.getCurrentUserId()).thenReturn(10L);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
+        when(gradeRepository.save(any(Grade.class))).thenAnswer(inv -> {
+            Grade g = inv.getArgument(0);
+            g.setId(200L);
+            return g;
+        });
+
+        Grade saved = gradeService.addGrade(dto);
+
+        assertEquals(200L, saved.getId());
+        assertEquals(student, saved.getStudent());
+        assertEquals(test, saved.getTest());
+        verify(gradeRepository).existsByStudentIdAndTestId(2L, 3L);
     }
 
     @Test
@@ -171,8 +203,7 @@ public class GradeServiceTest {
         dto.setTestId(2L);
         dto.setGrade(BigDecimal.valueOf(4.5));
 
-        when(gradeRepository.existsGradeByStudentId(1L)).thenReturn(false);
-        when(gradeRepository.existsGradeByTestId(2L)).thenReturn(false);
+        when(gradeRepository.existsByStudentIdAndTestId(1L, 2L)).thenReturn(false);
         when(studentRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(BadRequestException.class, () -> gradeService.addGrade(dto));
@@ -328,8 +359,7 @@ public class GradeServiceTest {
         teacher.setId(10L);
         test.setTeacher(teacher);
 
-        when(gradeRepository.existsGradeByStudentId(1L)).thenReturn(false);
-        when(gradeRepository.existsGradeByTestId(2L)).thenReturn(false);
+        when(gradeRepository.existsByStudentIdAndTestId(1L, 2L)).thenReturn(false);
         when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
         when(testRepository.findById(2L)).thenReturn(Optional.of(test));
         when(userService.getCurrentUserId()).thenReturn(10L);

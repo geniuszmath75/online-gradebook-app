@@ -9,12 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface GradeRepository extends JpaRepository<Grade, Long>, JpaSpecificationExecutor<Grade> {
-    // Check if grade exists with given student ID
-    Boolean existsGradeByStudentId(Long studentId);
+    boolean existsByStudentIdAndTestId(Long studentId, Long testId);
 
-    // Check if grade exists with given test ID
-    Boolean existsGradeByTestId(Long testId);
-
-    // Find the grade with given studentId and testId
     Optional<Grade> findGradeByStudentIdAndTestId(Long studentId, Long testId);
 }
