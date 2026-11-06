@@ -3,6 +3,7 @@ package org.example.onlinegradebookapp.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -53,4 +54,9 @@ public class Student {
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Grade> grades = new ArrayList<>();
+
+    @JsonGetter("classId")
+    public Long jsonClassId() {
+        return schoolClass != null ? schoolClass.getId() : null;
+    }
 }

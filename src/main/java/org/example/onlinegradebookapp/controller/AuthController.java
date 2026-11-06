@@ -77,9 +77,15 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(auth);
             CustomUserDetails userDetails = userDetailsService.loadUserByUsername(dto.getEmail());
             String token = jwtService.generateToken(userDetails);
-            Map<String, String> response = new HashMap<>();
+            String role = userDetails.getAuthorities().stream()
+                    .findFirst()
+                    .map(authority -> authority.getAuthority().replace("ROLE_", ""))
+                    .orElse("UNKNOWN");
+            Map<String, Object> response = new HashMap<>();
             response.put("email", dto.getEmail());
             response.put("token", token);
+            response.put("id", userDetails.getId());
+            response.put("role", role);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (BadCredentialsException e) {
             throw new UnauthorizedException("Invalid email or password");

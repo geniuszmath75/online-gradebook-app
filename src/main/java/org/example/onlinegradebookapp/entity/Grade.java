@@ -1,6 +1,7 @@
 package org.example.onlinegradebookapp.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,4 +48,14 @@ public class Grade {
     @JsonBackReference
     @JoinColumn(name = "test_id", nullable = false)
     private KnowledgeTest test;
+
+    @JsonGetter("studentId")
+    public Long jsonStudentId() {
+        return student != null ? student.getId() : null;
+    }
+
+    @JsonGetter("testId")
+    public Long jsonTestId() {
+        return test != null ? test.getId() : null;
+    }
 }

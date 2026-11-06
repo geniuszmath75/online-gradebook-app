@@ -85,15 +85,21 @@ public class AuthControllerTest {
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
         when(userDetailsService.loadUserByUsername(dto.getEmail())).thenReturn(userDetails);
         when(jwtService.generateToken(userDetails)).thenReturn("mockToken");
+        when(userDetails.getId()).thenReturn(7L);
+        org.mockito.Mockito.doReturn(
+                java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_TEACHER"))
+        ).when(userDetails).getAuthorities();
 
         ResponseEntity<?> response = authController.login(dto);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         @SuppressWarnings("unchecked")
-        Map<String, String> body = (Map<String, String>) response.getBody();
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
         assert body != null;
         assertEquals(dto.getEmail(), body.get("email"));
         assertEquals("mockToken", body.get("token"));
+        assertEquals(7L, body.get("id"));
+        assertEquals("TEACHER", body.get("role"));
     }
 
     @Test
