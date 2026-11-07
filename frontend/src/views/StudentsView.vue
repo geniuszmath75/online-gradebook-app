@@ -7,6 +7,7 @@ import { listClasses } from '@/api/classes'
 import { createStudent, deleteStudent, listStudents, updateStudent } from '@/api/students'
 import type { SchoolClass, Student, StudentUpdateRequest } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
+import { hasChanges, pickChanged } from '@/utils/pickChanged'
 
 const auth = useAuthStore()
 const students = ref<Student[]>([])
@@ -24,13 +25,23 @@ const createForm = reactive({
   classId: '',
 })
 
-const editForm = reactive({
+type StudentEditSnapshot = {
+  email: string
+  firstName: string
+  lastName: string
+  classId: string
+  password: string
+}
+
+const editForm = reactive<StudentEditSnapshot>({
   email: '',
   firstName: '',
   lastName: '',
   classId: '',
   password: '',
 })
+
+const editSnapshot = ref<StudentEditSnapshot | null>(null)
 
 const classNameById = computed(() => {
   const map = new Map<number, string>()
@@ -80,32 +91,66 @@ async function onCreate() {
 
 function startEdit(student: Student) {
   editingId.value = student.id
-  editForm.email = student.email
-  editForm.firstName = student.firstName
-  editForm.lastName = student.lastName
-  editForm.classId = student.classId != null ? String(student.classId) : ''
-  editForm.password = ''
+  const snapshot: StudentEditSnapshot = {
+    email: student.email,
+    firstName: student.firstName,
+    lastName: student.lastName,
+    classId: student.classId != null ? String(student.classId) : '',
+    password: '',
+  }
+  editSnapshot.value = { ...snapshot }
+  Object.assign(editForm, snapshot)
 }
 
 function cancelEdit() {
   editingId.value = null
+  editSnapshot.value = null
 }
 
 async function onSaveEdit() {
-  if (editingId.value == null) return
+  if (editingId.value == null || editSnapshot.value == null) return
   error.value = ''
   notice.value = ''
+
+  const current: StudentEditSnapshot = {
+    email: editForm.email.trim(),
+    firstName: editForm.firstName.trim(),
+    lastName: editForm.lastName.trim(),
+    classId: editForm.classId,
+    password: editForm.password,
+  }
+
+  const changed = pickChanged(editSnapshot.value, current, [
+    'email',
+    'firstName',
+    'lastName',
+    'classId',
+    'password',
+  ])
+
+  if (changed.password === '') {
+    delete changed.password
+  }
+
+  if (!hasChanges(changed)) {
+    notice.value = 'No changes to save'
+    return
+  }
+
+  const payload: StudentUpdateRequest = {}
+  if (changed.email !== undefined) payload.email = changed.email
+  if (changed.firstName !== undefined) payload.firstName = changed.firstName
+  if (changed.lastName !== undefined) payload.lastName = changed.lastName
+  if (changed.classId !== undefined) {
+    payload.classId = changed.classId ? Number(changed.classId) : null
+  }
+  if (changed.password !== undefined) payload.password = changed.password
+
   try {
-    const payload: StudentUpdateRequest = {
-      email: editForm.email.trim(),
-      firstName: editForm.firstName.trim(),
-      lastName: editForm.lastName.trim(),
-    }
-    if (editForm.classId) payload.classId = Number(editForm.classId)
-    if (editForm.password.trim()) payload.password = editForm.password
     await updateStudent(editingId.value, payload)
     notice.value = 'Student updated successfully'
     editingId.value = null
+    editSnapshot.value = null
     await load()
   } catch (err) {
     error.value = getApiErrorMessage(err)

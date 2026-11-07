@@ -6,6 +6,7 @@ import { getApiErrorMessage } from '@/api/errors'
 import { getStudent, updateStudent } from '@/api/students'
 import type { Grade, Student, StudentUpdateRequest } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
+import { hasChanges, pickChanged } from '@/utils/pickChanged'
 
 const auth = useAuthStore()
 const student = ref<Student | null>(null)
@@ -13,12 +14,21 @@ const error = ref('')
 const notice = ref('')
 const loading = ref(false)
 
-const form = reactive({
+type ProfileSnapshot = {
+  email: string
+  firstName: string
+  lastName: string
+  password: string
+}
+
+const form = reactive<ProfileSnapshot>({
   email: '',
   firstName: '',
   lastName: '',
   password: '',
 })
+
+const snapshot = ref<ProfileSnapshot | null>(null)
 
 async function load() {
   if (auth.userId == null) {
@@ -29,10 +39,14 @@ async function load() {
   error.value = ''
   try {
     student.value = await getStudent(auth.userId)
-    form.email = student.value.email
-    form.firstName = student.value.firstName
-    form.lastName = student.value.lastName
-    form.password = ''
+    const next: ProfileSnapshot = {
+      email: student.value.email,
+      firstName: student.value.firstName,
+      lastName: student.value.lastName,
+      password: '',
+    }
+    snapshot.value = { ...next }
+    Object.assign(form, next)
   } catch (err) {
     error.value = getApiErrorMessage(err)
   } finally {
@@ -41,19 +55,50 @@ async function load() {
 }
 
 async function onSave() {
-  if (auth.userId == null) return
+  if (auth.userId == null || snapshot.value == null) return
   error.value = ''
   notice.value = ''
+
+  const current: ProfileSnapshot = {
+    email: form.email.trim(),
+    firstName: form.firstName.trim(),
+    lastName: form.lastName.trim(),
+    password: form.password,
+  }
+
+  const changed = pickChanged(snapshot.value, current, [
+    'email',
+    'firstName',
+    'lastName',
+    'password',
+  ])
+
+  if (changed.password === '') {
+    delete changed.password
+  }
+
+  if (!hasChanges(changed)) {
+    notice.value = 'No changes to save'
+    return
+  }
+
+  const payload: StudentUpdateRequest = {}
+  if (changed.email !== undefined) payload.email = changed.email
+  if (changed.firstName !== undefined) payload.firstName = changed.firstName
+  if (changed.lastName !== undefined) payload.lastName = changed.lastName
+  if (changed.password !== undefined) payload.password = changed.password
+
   try {
-    const payload: StudentUpdateRequest = {
-      email: form.email.trim(),
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
-    }
-    if (form.password.trim()) payload.password = form.password
     student.value = await updateStudent(auth.userId, payload)
     notice.value = 'Profile updated successfully'
-    form.password = ''
+    const next: ProfileSnapshot = {
+      email: student.value.email,
+      firstName: student.value.firstName,
+      lastName: student.value.lastName,
+      password: '',
+    }
+    snapshot.value = { ...next }
+    Object.assign(form, next)
   } catch (err) {
     error.value = getApiErrorMessage(err)
   }

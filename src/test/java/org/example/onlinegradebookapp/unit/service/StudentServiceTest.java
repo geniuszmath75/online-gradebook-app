@@ -197,13 +197,36 @@ public class StudentServiceTest {
 
     @Test
     void updateStudentAttributes_shouldThrow_whenEmailAlreadyExists() {
+        Student existing = new Student();
+        existing.setEmail("current@gmail.com");
         StudentUpdateDto dto = new StudentUpdateDto();
         dto.setEmail("taken@gmail.com");
 
+        when(studentRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(studentRepository.existsByEmail("taken@gmail.com")).thenReturn(true);
 
         assertThrows(ConflictException.class, () -> studentService.updateStudentAttributes(dto, 1L));
-        verify(studentRepository, never()).findById(any());
+        verify(studentRepository, never()).save(any());
+    }
+
+    @Test
+    void updateStudentAttributes_shouldAllowSameEmail() {
+        Student existing = new Student();
+        existing.setEmail("same@gmail.com");
+        existing.setFirstName("Old");
+        StudentUpdateDto dto = new StudentUpdateDto();
+        dto.setEmail("same@gmail.com");
+        dto.setFirstName("New");
+
+        when(studentRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(studentRepository.save(any(Student.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Student updated = studentService.updateStudentAttributes(dto, 1L);
+
+        assertEquals("same@gmail.com", updated.getEmail());
+        assertEquals("New", updated.getFirstName());
+        verify(studentRepository, never()).existsByEmail(any());
+        verify(studentRepository).save(existing);
     }
 
     @Test

@@ -65,17 +65,17 @@ public class StudentService {
 
     // Update attributes of student with given ID
     public Student updateStudentAttributes(StudentUpdateDto dto, Long id) throws ResourceNotFoundException {
-        // Check if student with given email already exists
-        if(studentRepository.existsByEmail(dto.getEmail())) {
-            throw new ConflictException("Email '"+dto.getEmail()+"' already exists");
-        }
-
-        // Find a student if exists in database
         Optional<Student> optionalStudent = studentRepository.findById(id);
 
-        // If the student exists, update it
         if(optionalStudent.isPresent()) {
             Student student = optionalStudent.get();
+
+            // Conflict only when email changes to one already used by someone else
+            if(dto.getEmail() != null
+                    && !dto.getEmail().equals(student.getEmail())
+                    && Boolean.TRUE.equals(studentRepository.existsByEmail(dto.getEmail()))) {
+                throw new ConflictException("Email '"+dto.getEmail()+"' already exists");
+            }
 
             // Check if 'email' is given
             if(dto.getEmail() != null) {

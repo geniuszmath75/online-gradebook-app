@@ -7,6 +7,7 @@ import { createGrade, deleteGrade, listGrades, updateGrade } from '@/api/grades'
 import { listStudents } from '@/api/students'
 import { listTests } from '@/api/tests'
 import type { Grade, GradeUpdateRequest, KnowledgeTest, Student } from '@/api/types'
+import { hasChanges, pickChanged } from '@/utils/pickChanged'
 
 const grades = ref<Grade[]>([])
 const students = ref<Student[]>([])
@@ -23,12 +24,21 @@ const createForm = reactive({
   testId: '',
 })
 
-const editForm = reactive({
+type GradeEditSnapshot = {
+  grade: string
+  description: string
+  studentId: string
+  testId: string
+}
+
+const editForm = reactive<GradeEditSnapshot>({
   grade: '',
   description: '',
   studentId: '',
   testId: '',
 })
+
+const editSnapshot = ref<GradeEditSnapshot | null>(null)
 
 const studentLabel = computed(() => {
   const map = new Map<number, string>()
@@ -84,30 +94,56 @@ async function onCreate() {
 
 function startEdit(grade: Grade) {
   editingId.value = grade.id
-  editForm.grade = String(grade.grade)
-  editForm.description = grade.description || ''
-  editForm.studentId = grade.studentId != null ? String(grade.studentId) : ''
-  editForm.testId = grade.testId != null ? String(grade.testId) : ''
+  const snapshot: GradeEditSnapshot = {
+    grade: String(grade.grade),
+    description: grade.description || '',
+    studentId: grade.studentId != null ? String(grade.studentId) : '',
+    testId: grade.testId != null ? String(grade.testId) : '',
+  }
+  editSnapshot.value = { ...snapshot }
+  Object.assign(editForm, snapshot)
 }
 
 function cancelEdit() {
   editingId.value = null
+  editSnapshot.value = null
 }
 
 async function onSaveEdit() {
-  if (editingId.value == null) return
+  if (editingId.value == null || editSnapshot.value == null) return
   error.value = ''
   notice.value = ''
+
+  const current: GradeEditSnapshot = {
+    grade: editForm.grade,
+    description: editForm.description.trim(),
+    studentId: editForm.studentId,
+    testId: editForm.testId,
+  }
+
+  const changed = pickChanged(editSnapshot.value, current, [
+    'grade',
+    'description',
+    'studentId',
+    'testId',
+  ])
+
+  if (!hasChanges(changed)) {
+    notice.value = 'No changes to save'
+    return
+  }
+
+  const payload: GradeUpdateRequest = {}
+  if (changed.grade !== undefined) payload.grade = Number(changed.grade)
+  if (changed.description !== undefined) payload.description = changed.description
+  if (changed.studentId !== undefined) payload.studentId = Number(changed.studentId)
+  if (changed.testId !== undefined) payload.testId = Number(changed.testId)
+
   try {
-    const payload: GradeUpdateRequest = {
-      grade: Number(editForm.grade),
-      description: editForm.description.trim(),
-    }
-    if (editForm.studentId) payload.studentId = Number(editForm.studentId)
-    if (editForm.testId) payload.testId = Number(editForm.testId)
     await updateGrade(editingId.value, payload)
     notice.value = 'Grade updated successfully'
     editingId.value = null
+    editSnapshot.value = null
     await load()
   } catch (err) {
     error.value = getApiErrorMessage(err)

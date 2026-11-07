@@ -98,17 +98,17 @@ public class UserService {
 
     // Update attributes of user with given ID
     public User updateUserAttributes(UserUpdateDto dto, Long id) throws ResourceNotFoundException {
-        // Check if user with given email already exists
-        if(userRepository.existsByEmail(dto.getEmail())) {
-            throw new ConflictException("Email '"+dto.getEmail()+"' already exists");
-        }
-
-        // Find a user if exists in database
         Optional<User> optionalUser = userRepository.findById(id);
 
-        // If the user exists, update it
         if(optionalUser.isPresent()) {
             User updatedUser = optionalUser.get();
+
+            // Conflict only when email changes to one already used by someone else
+            if(dto.getEmail() != null
+                    && !dto.getEmail().equals(updatedUser.getEmail())
+                    && Boolean.TRUE.equals(userRepository.existsByEmail(dto.getEmail()))) {
+                throw new ConflictException("Email '"+dto.getEmail()+"' already exists");
+            }
 
             // Check if 'password' is given
             if(dto.getPassword() != null) {

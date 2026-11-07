@@ -15,6 +15,7 @@ const loading = ref(false)
 const editingId = ref<number | null>(null)
 const createName = ref('')
 const editName = ref('')
+const editSnapshotName = ref<string | null>(null)
 
 async function load() {
   loading.value = true
@@ -44,20 +45,30 @@ async function onCreate() {
 function startEdit(item: SchoolClass) {
   editingId.value = item.id
   editName.value = item.name
+  editSnapshotName.value = item.name
 }
 
 function cancelEdit() {
   editingId.value = null
+  editSnapshotName.value = null
 }
 
 async function onSaveEdit() {
-  if (editingId.value == null) return
+  if (editingId.value == null || editSnapshotName.value == null) return
   error.value = ''
   notice.value = ''
+
+  const nextName = editName.value.trim()
+  if (nextName === editSnapshotName.value) {
+    notice.value = 'No changes to save'
+    return
+  }
+
   try {
-    await updateClass(editingId.value, { name: editName.value.trim() })
+    await updateClass(editingId.value, { name: nextName })
     notice.value = 'Class updated successfully'
     editingId.value = null
+    editSnapshotName.value = null
     await load()
   } catch (err) {
     error.value = getApiErrorMessage(err)

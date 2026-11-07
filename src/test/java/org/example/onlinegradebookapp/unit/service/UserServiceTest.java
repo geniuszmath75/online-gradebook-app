@@ -390,6 +390,30 @@ public class UserServiceTest {
         assertThatThrownBy(() -> userService.updateUserAttributes(dto, userId))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("Email 'existing@gmail.com' already exists");
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updateUserAttributes_shouldAllowSameEmail() {
+        Long userId = 1L;
+        User user = new User();
+        user.setId(userId);
+        user.setEmail("same@gmail.com");
+        user.setFirstName("Old");
+
+        UserUpdateDto dto = new UserUpdateDto();
+        dto.setEmail("same@gmail.com");
+        dto.setFirstName("New");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        User updated = userService.updateUserAttributes(dto, userId);
+
+        assertThat(updated.getEmail()).isEqualTo("same@gmail.com");
+        assertThat(updated.getFirstName()).isEqualTo("New");
+        verify(userRepository, never()).existsByEmail(anyString());
+        verify(userRepository).save(user);
     }
 
     @Test
