@@ -31,3 +31,161 @@ body {
 a {
   color: inherit;
 }
+
+.page {
+  display: grid;
+  gap: 1rem;
+  max-width: 68rem;
+}
+
+.page__head h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.55rem;
+  color: #24352e;
+}
+
+.page__head p {
+  margin: 0;
+  color: #4d5c55;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(22, 53, 43, 0.12);
+  border-radius: 0.55rem;
+  padding: 1rem;
+}
+
+.panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+
+.form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  color: #31443c;
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+input,
+select {
+  width: 100%;
+  border: 1px solid #9bb5a8;
+  background: rgba(255, 255, 255, 0.8);
+  color: #1f2a25;
+  border-radius: 0.4rem;
+  padding: 0.55rem 0.65rem;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #2f6b54;
+  box-shadow: 0 0 0 3px rgba(47, 107, 84, 0.16);
+}
+
+button {
+  justify-self: start;
+  border: 0;
+  border-radius: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  background: #1f5a45;
+  color: #f4faf7;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #174836;
+}
+
+button.ghost {
+  background: transparent;
+  color: #1f5a45;
+  border: 1px solid #7f9d8e;
+}
+
+button.ghost:hover {
+  background: rgba(31, 90, 69, 0.08);
+}
+
+button.danger {
+  background: #8a2f2f;
+}
+
+button.danger:hover {
+  background: #6f2424;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.65rem 0.5rem;
+  border-bottom: 1px solid rgba(22, 53, 43, 0.1);
+  vertical-align: top;
+}
+
+th {
+  font-size: 0.85rem;
+  color: #3f5249;
+}
+
+.actions {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.inline-form input,
+.inline-form select {
+  width: auto;
+  min-width: 8rem;
+}
+
+.notice {
+  margin: 0;
+  color: #1f5a45;
+  background: rgba(31, 90, 69, 0.1);
+  border-radius: 0.4rem;
+  padding: 0.65rem 0.75rem;
+}
+
+.muted {
+  margin: 0;
+  color: #66776f;
+}

@@ -23,6 +23,8 @@ http.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('email')
+      localStorage.removeItem('userId')
+      localStorage.removeItem('role')
       if (!window.location.pathname.startsWith('/login')) {
         const redirect = encodeURIComponent(window.location.pathname + window.location.search)
         window.location.assign(`/login?redirect=${redirect}`)

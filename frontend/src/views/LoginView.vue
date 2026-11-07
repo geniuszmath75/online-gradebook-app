@@ -18,8 +18,8 @@ async function onSubmit() {
   loading.value = true
   try {
     await auth.login(email.value.trim(), password.value)
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
-    await router.replace(redirect || '/')
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+    await router.replace(redirect || { name: auth.homeRouteName() })
   } catch (err) {
     error.value = getApiErrorMessage(err, 'Invalid email or password')
   } finally {
@@ -33,7 +33,7 @@ async function onSubmit() {
     <div class="login__panel">
       <p class="brand">Online Gradebook</p>
       <h1>Sign in to continue</h1>
-      <p class="lead">Use your teacher or admin account to access the gradebook.</p>
+      <p class="lead">Sign in as a student, teacher, or admin to access the gradebook.</p>
 
       <form class="form" @submit.prevent="onSubmit">
         <label class="field">
@@ -44,7 +44,7 @@ async function onSubmit() {
             name="email"
             autocomplete="username"
             required
-            placeholder="admin@gmail.com"
+            placeholder="student.adamczyk@example.com"
           />
         </label>
 
@@ -151,6 +151,7 @@ h1 {
 }
 
 .submit {
+  width: 100%;
   border: 0;
   border-radius: 0.45rem;
   padding: 0.8rem 1rem;

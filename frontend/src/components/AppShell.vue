@@ -14,18 +14,25 @@ async function onLogout() {
 <template>
   <div class="shell">
     <header class="top">
-      <p class="brand">Online Gradebook</p>
+      <RouterLink class="brand" :to="{ name: auth.homeRouteName() }">Online Gradebook</RouterLink>
+
+      <nav v-if="auth.isStaff" class="nav">
+        <RouterLink :to="{ name: 'students' }">Students</RouterLink>
+        <RouterLink :to="{ name: 'grades' }">Grades</RouterLink>
+        <RouterLink :to="{ name: 'classes' }">Classes</RouterLink>
+      </nav>
+      <nav v-else class="nav">
+        <RouterLink :to="{ name: 'profile' }">My profile</RouterLink>
+      </nav>
+
       <div class="session">
-        <span class="email">{{ auth.email }}</span>
+        <span class="meta">{{ auth.email }} · {{ auth.role }}</span>
         <button type="button" class="logout" @click="onLogout">Sign out</button>
       </div>
     </header>
 
     <main class="content">
-      <h1>Welcome back</h1>
-      <p class="lead">
-        You are signed in. Student, grade, and class screens will land here next.
-      </p>
+      <slot />
     </main>
   </div>
 </template>
@@ -40,9 +47,9 @@ async function onLogout() {
 .top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.1rem 1.5rem;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid rgba(22, 53, 43, 0.12);
   background: rgba(255, 255, 255, 0.35);
   backdrop-filter: blur(6px);
@@ -51,20 +58,41 @@ async function onLogout() {
 .brand {
   margin: 0;
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  font-size: 1.55rem;
+  font-size: 1.45rem;
   letter-spacing: -0.02em;
   color: #16352b;
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  gap: 0.9rem;
+  flex: 1;
+}
+
+.nav a {
+  text-decoration: none;
+  color: #31443c;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.nav a.router-link-active {
+  color: #1f5a45;
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
 }
 
 .session {
   display: flex;
   align-items: center;
   gap: 0.85rem;
+  margin-left: auto;
 }
 
-.email {
+.meta {
   color: #3f5249;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .logout {
@@ -82,20 +110,8 @@ async function onLogout() {
 }
 
 .content {
-  padding: 2rem 1.5rem;
-  max-width: 42rem;
-  animation: rise 420ms ease-out;
-}
-
-h1 {
-  margin: 0 0 0.55rem;
-  font-size: 1.5rem;
-  color: #24352e;
-}
-
-.lead {
-  margin: 0;
-  color: #4d5c55;
+  padding: 1.5rem;
+  animation: rise 360ms ease-out;
 }
 
 @keyframes rise {
@@ -106,6 +122,13 @@ h1 {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (max-width: 720px) {
+  .session {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 </style>
