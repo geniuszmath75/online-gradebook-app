@@ -49,7 +49,7 @@ public class RoleAccessDenialIntegrationTest extends RestIntegrationTestSupport 
 
         getWithToken("/api/students", teacherToken)
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.page.totalPages").exists())
+                .andExpect(jsonPath("$.totalPages").exists())
                 .andExpect(jsonPath("$.content").exists());
     }
 }
