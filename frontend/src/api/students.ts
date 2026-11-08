@@ -1,10 +1,11 @@
 import { http } from './http'
+import { normalizePageResponse } from './types'
 import type {
   MessageResponse,
-  PageResponse,
   Student,
   StudentCreateRequest,
   StudentUpdateRequest,
+  PagePayload,
 } from './types'
 
 export async function listStudents(params: {
@@ -14,8 +15,8 @@ export async function listStudents(params: {
   email?: string
   sort?: string
 } = {}) {
-  const { data } = await http.get<PageResponse<Student>>('/api/students', { params })
-  return data
+  const { data } = await http.get<PagePayload<Student>>('/api/students', { params })
+  return normalizePageResponse(data)
 }
 
 export async function getStudent(id: number) {

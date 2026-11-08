@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import AppShell from '@/components/AppShell.vue'
 import ErrorBanner from '@/components/ErrorBanner.vue'
+import PaginationControls from '@/components/PaginationControls.vue'
 import { getApiErrorMessage } from '@/api/errors'
 import { createGrade, deleteGrade, listGrades, updateGrade } from '@/api/grades'
 import { listStudents } from '@/api/students'
@@ -16,6 +17,10 @@ const error = ref('')
 const notice = ref('')
 const loading = ref(false)
 const editingId = ref<number | null>(null)
+const page = ref(0)
+const pageSize = 5
+const totalPages = ref(0)
+const totalElements = ref(0)
 
 const createForm = reactive({
   grade: '4.0',
@@ -52,16 +57,19 @@ const testLabel = computed(() => {
   return map
 })
 
-async function load() {
+async function load(requestedPage = page.value) {
   loading.value = true
   error.value = ''
   try {
-    const [page, studentPage, testList] = await Promise.all([
-      listGrades({ size: 100 }),
+    const [gradePage, studentPage, testList] = await Promise.all([
+      listGrades({ page: requestedPage, size: pageSize }),
       listStudents({ size: 100 }),
       listTests(),
     ])
-    grades.value = page.content
+    grades.value = gradePage.content
+    page.value = gradePage.number
+    totalPages.value = gradePage.totalPages
+    totalElements.value = gradePage.totalElements
     students.value = studentPage.content
     tests.value = testList
   } catch (err) {
@@ -157,10 +165,15 @@ async function onDelete(id: number) {
   try {
     const result = await deleteGrade(id)
     notice.value = result.message
-    await load()
+    const nextPage = grades.value.length === 1 && page.value > 0 ? page.value - 1 : page.value
+    await load(nextPage)
   } catch (err) {
     error.value = getApiErrorMessage(err)
   }
+}
+
+function onPageChange(nextPage: number) {
+  void load(nextPage)
 }
 
 onMounted(load)
@@ -215,6 +228,9 @@ onMounted(load)
             </tr>
           </thead>
           <tbody>
+            <tr v-if="!loading && grades.length === 0">
+              <td colspan="5" class="muted">No grades found.</td>
+            </tr>
             <template v-for="grade in grades" :key="grade.id">
               <tr v-if="editingId === grade.id">
                 <td colspan="5">
@@ -248,6 +264,12 @@ onMounted(load)
           </tbody>
         </table>
       </div>
+      <PaginationControls
+        :page="page"
+        :total-pages="totalPages"
+        :total-elements="totalElements"
+        @change="onPageChange"
+      />
     </section>
   </AppShell>
 </template>

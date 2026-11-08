@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import AppShell from '@/components/AppShell.vue'
 import ErrorBanner from '@/components/ErrorBanner.vue'
+import PaginationControls from '@/components/PaginationControls.vue'
 import { getApiErrorMessage } from '@/api/errors'
 import { listClasses } from '@/api/classes'
 import { createStudent, deleteStudent, listStudents, updateStudent } from '@/api/students'
@@ -16,6 +17,10 @@ const error = ref('')
 const notice = ref('')
 const loading = ref(false)
 const editingId = ref<number | null>(null)
+const page = ref(0)
+const pageSize = 3
+const totalPages = ref(0)
+const totalElements = ref(0)
 
 const createForm = reactive({
   email: '',
@@ -49,15 +54,18 @@ const classNameById = computed(() => {
   return map
 })
 
-async function load() {
+async function load(requestedPage = page.value) {
   loading.value = true
   error.value = ''
   try {
-    const [page, classList] = await Promise.all([
-      listStudents({ size: 100, sort: 'lastName,asc' }),
+    const [studentPage, classList] = await Promise.all([
+      listStudents({ page: requestedPage, size: pageSize, sort: 'lastName,asc' }),
       listClasses(),
     ])
-    students.value = page.content
+    students.value = studentPage.content
+    page.value = studentPage.number
+    totalPages.value = studentPage.totalPages
+    totalElements.value = studentPage.totalElements
     classes.value = classList
   } catch (err) {
     error.value = getApiErrorMessage(err)
@@ -164,10 +172,15 @@ async function onDelete(id: number) {
   try {
     const result = await deleteStudent(id)
     notice.value = result.message
-    await load()
+    const nextPage = students.value.length === 1 && page.value > 0 ? page.value - 1 : page.value
+    await load(nextPage)
   } catch (err) {
     error.value = getApiErrorMessage(err)
   }
+}
+
+function onPageChange(nextPage: number) {
+  void load(nextPage)
 }
 
 onMounted(load)
@@ -214,6 +227,9 @@ onMounted(load)
             </tr>
           </thead>
           <tbody>
+            <tr v-if="!loading && students.length === 0">
+              <td colspan="4" class="muted">No students found.</td>
+            </tr>
             <template v-for="student in students" :key="student.id">
               <tr v-if="editingId === student.id">
                 <td colspan="4">
@@ -251,6 +267,12 @@ onMounted(load)
           </tbody>
         </table>
       </div>
+      <PaginationControls
+        :page="page"
+        :total-pages="totalPages"
+        :total-elements="totalElements"
+        @change="onPageChange"
+      />
     </section>
   </AppShell>
 </template>

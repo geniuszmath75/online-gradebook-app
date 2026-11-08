@@ -17,12 +17,35 @@ export interface LoginResponse {
   role: UserRole
 }
 
-export interface PageResponse<T> {
-  content: T[]
+export interface PageMetadata {
   totalElements: number
   totalPages: number
   number: number
   size: number
+}
+
+export interface PageResponse<T> extends PageMetadata {
+  content: T[]
+}
+
+export interface PagePayload<T> {
+  content: T[]
+  totalElements?: number
+  totalPages?: number
+  number?: number
+  size?: number
+  page?: Partial<PageMetadata>
+}
+
+export function normalizePageResponse<T>(payload: PagePayload<T>): PageResponse<T> {
+  const metadata = payload.page ?? {}
+  return {
+    content: payload.content,
+    totalElements: metadata.totalElements ?? payload.totalElements ?? 0,
+    totalPages: metadata.totalPages ?? payload.totalPages ?? 0,
+    number: metadata.number ?? payload.number ?? 0,
+    size: metadata.size ?? payload.size ?? payload.content.length,
+  }
 }
 
 export interface MessageResponse {

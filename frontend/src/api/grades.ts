@@ -1,10 +1,11 @@
 import { http } from './http'
+import { normalizePageResponse } from './types'
 import type {
   Grade,
   GradeCreateRequest,
   GradeUpdateRequest,
   MessageResponse,
-  PageResponse,
+  PagePayload,
 } from './types'
 
 export async function listGrades(params: {
@@ -13,8 +14,8 @@ export async function listGrades(params: {
   studentId?: number
   testId?: number
 } = {}) {
-  const { data } = await http.get<PageResponse<Grade>>('/api/grades', { params })
-  return data
+  const { data } = await http.get<PagePayload<Grade>>('/api/grades', { params })
+  return normalizePageResponse(data)
 }
 
 export async function createGrade(payload: GradeCreateRequest) {
