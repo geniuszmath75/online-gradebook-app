@@ -149,7 +149,7 @@ public class FullApplicationFlowIntegrationTest extends RestIntegrationTestSuppo
         KnowledgeTestUpdateDto updateTest = new KnowledgeTestUpdateDto();
         updateTest.setCategory(TestCategory.HOMEWORK);
         patchWithToken("/api/knowledge_tests/" + test1Id, teacher2Token, updateTest)
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
 
         // 13. Teacher2 create grade for student2
         createGrade(teacher2Token, BigDecimal.valueOf(4.5), "Ok", student2Id, test2Id);
@@ -159,7 +159,7 @@ public class FullApplicationFlowIntegrationTest extends RestIntegrationTestSuppo
         GradeUpdateDto gradeUpdate = new GradeUpdateDto();
         gradeUpdate.setGrade(BigDecimal.valueOf(3.0));
         patchWithToken("/api/grades/" + grade1Id, teacher2Token, gradeUpdate)
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
 
         // 15-17. Student1 i Student2 - checking access
         getWithToken("/api/students/" + student1Id, student1Token).andExpect(status().isOk());

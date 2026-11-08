@@ -8,8 +8,8 @@ import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.event.GradeCreatedEvent;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ConflictException;
+import org.example.onlinegradebookapp.exception.ForbiddenException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
-import org.example.onlinegradebookapp.exception.UnauthorizedException;
 import org.example.onlinegradebookapp.payload.request.GradeDto;
 import org.example.onlinegradebookapp.payload.request.GradeUpdateDto;
 import org.example.onlinegradebookapp.repository.GradeRepository;
@@ -74,6 +74,20 @@ public class GradeServiceTest {
     }
 
     @Test
+    void findAllGrades_shouldUseCurrentTeacherForNonAdmin() {
+        Pageable pageable = PageRequest.of(0, 20);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
+        when(userService.getCurrentUserId()).thenReturn(11L);
+        when(gradeRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(), pageable, 0));
+
+        gradeService.findAllGrades(null, null, null, null, pageable);
+
+        verify(userService).getCurrentUserId();
+        verify(gradeRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
     void findAllGrades_shouldThrowBadRequest_whenDateRangeInvalid() {
         Pageable pageable = PageRequest.of(0, 20);
         Instant from = Instant.parse("2024-06-01T00:00:00Z");
@@ -88,7 +102,14 @@ public class GradeServiceTest {
     void findGradeById_shouldReturnGrade_whenExists() {
         Grade grade = new Grade();
         grade.setId(1L);
+        KnowledgeTest test = new KnowledgeTest();
+        User teacher = new User();
+        teacher.setId(10L);
+        test.setTeacher(teacher);
+        grade.setTest(test);
         when(gradeRepository.findById(1L)).thenReturn(Optional.of(grade));
+        when(userService.getCurrentUserId()).thenReturn(10L);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
 
         Grade result = gradeService.findGradeById(1L);
 
@@ -99,7 +120,7 @@ public class GradeServiceTest {
     void findGradeById_shouldThrowException_whenNotFound() {
         when(gradeRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(BadRequestException.class, () -> gradeService.findGradeById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> gradeService.findGradeById(1L));
     }
 
     @Test
@@ -157,6 +178,18 @@ public class GradeServiceTest {
         dto.setTestId(2L);
         dto.setGrade(BigDecimal.valueOf(4.5));
 
+        Student student = new Student();
+        student.setId(1L);
+        KnowledgeTest test = new KnowledgeTest();
+        test.setId(2L);
+        User teacher = new User();
+        teacher.setId(10L);
+        test.setTeacher(teacher);
+
+        when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
+        when(testRepository.findById(2L)).thenReturn(Optional.of(test));
+        when(userService.getCurrentUserId()).thenReturn(10L);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
         when(gradeRepository.existsByStudentIdAndTestId(1L, 2L)).thenReturn(true);
 
         assertThrows(ConflictException.class, () -> gradeService.addGrade(dto));
@@ -241,7 +274,7 @@ public class GradeServiceTest {
         when(userService.getCurrentUserId()).thenReturn(1L);
         when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
 
-        assertThrows(UnauthorizedException.class, () -> gradeService.addGrade(dto));
+        assertThrows(ForbiddenException.class, () -> gradeService.addGrade(dto));
     }
 
     @Test
@@ -252,6 +285,9 @@ public class GradeServiceTest {
         Grade grade = new Grade();
         grade.setId(1L);
         grade.setGrade(BigDecimal.valueOf(2.0));
+        Student student = new Student();
+        student.setId(1L);
+        grade.setStudent(student);
 
         KnowledgeTest test = new KnowledgeTest();
         User teacher = new User();
@@ -296,7 +332,7 @@ public class GradeServiceTest {
         GradeUpdateDto dto = new GradeUpdateDto();
         dto.setGrade(BigDecimal.valueOf(4.0));
 
-        assertThrows(UnauthorizedException.class, () -> gradeService.updateGradeAttributes(dto, 1L));
+        assertThrows(ForbiddenException.class, () -> gradeService.updateGradeAttributes(dto, 1L));
     }
 
     @Test
@@ -340,7 +376,7 @@ public class GradeServiceTest {
         when(userService.getCurrentUserId()).thenReturn(1L);
         when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
 
-        assertThrows(UnauthorizedException.class, () -> gradeService.deleteGrade(1L));
+        assertThrows(ForbiddenException.class, () -> gradeService.deleteGrade(1L));
     }
 
     @Test
@@ -394,6 +430,9 @@ public class GradeServiceTest {
         newStudent.setId(3L);
         KnowledgeTest newTest = new KnowledgeTest();
         newTest.setId(4L);
+        User newTestTeacher = new User();
+        newTestTeacher.setId(11L);
+        newTest.setTeacher(newTestTeacher);
 
         when(gradeRepository.findById(1L)).thenReturn(Optional.of(grade));
         when(userService.getCurrentUserId()).thenReturn(11L);
@@ -410,11 +449,47 @@ public class GradeServiceTest {
     }
 
     @Test
+    void updateGradeAttributes_shouldRejectChangingToAnotherTeachersTest() {
+        GradeUpdateDto dto = new GradeUpdateDto();
+        dto.setTestId(4L);
+
+        Grade grade = new Grade();
+        grade.setId(1L);
+        Student student = new Student();
+        student.setId(3L);
+        grade.setStudent(student);
+
+        KnowledgeTest originalTest = new KnowledgeTest();
+        User owner = new User();
+        owner.setId(11L);
+        originalTest.setTeacher(owner);
+        grade.setTest(originalTest);
+
+        KnowledgeTest otherTeacherTest = new KnowledgeTest();
+        otherTeacherTest.setId(4L);
+        User otherTeacher = new User();
+        otherTeacher.setId(99L);
+        otherTeacherTest.setTeacher(otherTeacher);
+
+        when(gradeRepository.findById(1L)).thenReturn(Optional.of(grade));
+        when(userService.getCurrentUserId()).thenReturn(11L);
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
+        when(testRepository.findById(4L)).thenReturn(Optional.of(otherTeacherTest));
+
+        assertThrows(ForbiddenException.class,
+                () -> gradeService.updateGradeAttributes(dto, 1L));
+        verify(gradeRepository, never()).save(any(Grade.class));
+    }
+
+    @Test
     void updateGradeAttributes_shouldThrow_whenStudentNotFound() {
         GradeUpdateDto dto = new GradeUpdateDto();
         dto.setStudentId(99L);
 
         Grade grade = new Grade();
+        Student student = new Student();
+        student.setId(1L);
+        grade.setStudent(student);
         KnowledgeTest test = new KnowledgeTest();
         User teacher = new User();
         teacher.setId(11L);
@@ -460,6 +535,9 @@ public class GradeServiceTest {
         teacher.setId(100L);
         test.setTeacher(teacher);
         grade.setTest(test);
+        Student student = new Student();
+        student.setId(1L);
+        grade.setStudent(student);
 
         when(gradeRepository.findById(1L)).thenReturn(Optional.of(grade));
         when(userService.getCurrentUserId()).thenReturn(1L);

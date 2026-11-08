@@ -7,6 +7,7 @@ import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ConflictException;
+import org.example.onlinegradebookapp.exception.ForbiddenException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.SubjectDto;
 import org.example.onlinegradebookapp.payload.request.UserRegistrationDto;
@@ -49,6 +50,10 @@ public class UserService {
 
     // Registers a new user using data from the registration DTO
     public User register(UserRegistrationDto dto) {
+        if (dto.getRole() == null) {
+            throw new BadRequestException("Role cannot be null");
+        }
+
         // Check if user with given email already exists in DB
         if(userRepository.existsByEmail(dto.getEmail())) {
             throw new ConflictException("Email '" + dto.getEmail() + "' already exists");
@@ -128,8 +133,13 @@ public class UserService {
             }
             // Check if 'role' is given
             if(dto.getRole() != null) {
+                if (!dto.getRole().equals(updatedUser.getRole()) && !hasRole(UserRole.ADMIN)) {
+                    throw new ForbiddenException("Only ADMIN users can change user roles.");
+                }
+
                 // Check if ADMIN role can be assigned
-                if(dto.getRole().equals(UserRole.ADMIN)) {
+                if(dto.getRole().equals(UserRole.ADMIN)
+                        && !UserRole.ADMIN.equals(updatedUser.getRole())) {
                     Long adminCount = userRepository.countByRole(UserRole.ADMIN);
                     if(adminCount > 0) {
                         throw new ConflictException("There can only be one ADMIN user.");
@@ -214,6 +224,9 @@ public class UserService {
 
     public boolean hasRole(UserRole role) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return false;
+        }
         return authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_" + role));
     }

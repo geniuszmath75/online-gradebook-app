@@ -30,9 +30,12 @@ class GradeSpecificationsTest {
         Path<Object> studentIdPath = mock(Path.class);
         Path<Object> testPath = mock(Path.class);
         Path<Object> testIdPath = mock(Path.class);
+        Path<Object> teacherPath = mock(Path.class);
+        Path<Object> teacherIdPath = mock(Path.class);
         Path<Instant> createdAtPath = mock(Path.class);
         Predicate studentPredicate = mock(Predicate.class);
         Predicate testPredicate = mock(Predicate.class);
+        Predicate teacherPredicate = mock(Predicate.class);
         Predicate fromPredicate = mock(Predicate.class);
         Predicate toPredicate = mock(Predicate.class);
         Predicate andPredicate = mock(Predicate.class);
@@ -44,19 +47,23 @@ class GradeSpecificationsTest {
         when(studentPath.get("id")).thenReturn(studentIdPath);
         when(root.get("test")).thenReturn(testPath);
         when(testPath.get("id")).thenReturn(testIdPath);
+        when(testPath.get("teacher")).thenReturn(teacherPath);
+        when(teacherPath.get("id")).thenReturn(teacherIdPath);
         when(root.<Instant>get("createdAt")).thenReturn(createdAtPath);
         when(cb.equal(studentIdPath, 1L)).thenReturn(studentPredicate);
         when(cb.equal(testIdPath, 2L)).thenReturn(testPredicate);
+        when(cb.equal(teacherIdPath, 10L)).thenReturn(teacherPredicate);
         when(cb.greaterThanOrEqualTo(createdAtPath, from)).thenReturn(fromPredicate);
         when(cb.lessThanOrEqualTo(createdAtPath, to)).thenReturn(toPredicate);
         when(cb.and(any(Predicate[].class))).thenReturn(andPredicate);
 
-        Specification<Grade> spec = GradeSpecifications.withFilters(1L, 2L, from, to);
+        Specification<Grade> spec = GradeSpecifications.withFilters(1L, 2L, from, to, 10L);
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertNotNull(result);
         verify(cb).equal(studentIdPath, 1L);
         verify(cb).equal(testIdPath, 2L);
+        verify(cb).equal(teacherIdPath, 10L);
         verify(cb).greaterThanOrEqualTo(createdAtPath, from);
         verify(cb).lessThanOrEqualTo(createdAtPath, to);
     }

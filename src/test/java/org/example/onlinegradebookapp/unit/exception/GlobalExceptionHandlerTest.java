@@ -53,6 +53,19 @@ public class GlobalExceptionHandlerTest {
         assertThat(response.getBody().getMessage()).isEqualTo(message);
     }
 
+    @Test
+    void shouldReturnForbidden_whenForbiddenException() {
+        String message = "Forbidden";
+        ForbiddenException ex = new ForbiddenException(message);
+
+        ResponseEntity<ApiError> response = handler.handleForbidden(ex);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(Objects.requireNonNull(response.getBody()).getStatus()).isEqualTo(403);
+        assertThat(response.getBody().getMessage()).isEqualTo(message);
+    }
+
 
     @Test
     void shouldReturnConflict_whenConflictException() {

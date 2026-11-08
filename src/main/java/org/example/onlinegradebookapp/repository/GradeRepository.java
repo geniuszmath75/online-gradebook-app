@@ -11,5 +11,7 @@ import java.util.Optional;
 public interface GradeRepository extends JpaRepository<Grade, Long>, JpaSpecificationExecutor<Grade> {
     boolean existsByStudentIdAndTestId(Long studentId, Long testId);
 
+    boolean existsByStudentIdAndTestIdAndIdNot(Long studentId, Long testId, Long id);
+
     Optional<Grade> findGradeByStudentIdAndTestId(Long studentId, Long testId);
 }

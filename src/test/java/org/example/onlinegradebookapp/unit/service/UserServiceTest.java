@@ -7,6 +7,7 @@ import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ConflictException;
+import org.example.onlinegradebookapp.exception.ForbiddenException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.SubjectDto;
 import org.example.onlinegradebookapp.payload.request.UserRegistrationDto;
@@ -156,6 +157,16 @@ public class UserServiceTest {
         when(userRepository.countByRole(UserRole.ADMIN)).thenReturn(1L);
 
         assertThrows(ConflictException.class, () -> userService.register(registrationDto));
+    }
+
+    @Test
+    void register_shouldThrowBadRequest_whenRoleIsMissing() {
+        registrationDto.setRole(null);
+
+        assertThatThrownBy(() -> userService.register(registrationDto))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Role cannot be null");
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
@@ -429,10 +440,35 @@ public class UserServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(userRepository.countByRole(UserRole.ADMIN)).thenReturn(1L);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "admin",
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                )
+        );
 
         assertThatThrownBy(() -> userService.updateUserAttributes(dto, userId))
                 .isInstanceOf(ConflictException.class)
                 .hasMessage("There can only be one ADMIN user.");
+    }
+
+    @Test
+    void updateUserAttributes_shouldRejectRoleChange_forNonAdmin() {
+        Long userId = 1L;
+        User user = new User();
+        user.setId(userId);
+        user.setUserRole(UserRole.TEACHER);
+
+        UserUpdateDto dto = new UserUpdateDto();
+        dto.setRole(UserRole.ADMIN);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> userService.updateUserAttributes(dto, userId))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("Only ADMIN users can change user roles.");
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test

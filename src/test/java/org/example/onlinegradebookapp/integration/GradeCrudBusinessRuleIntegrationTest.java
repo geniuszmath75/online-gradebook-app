@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -50,6 +52,33 @@ public class GradeCrudBusinessRuleIntegrationTest extends RestIntegrationTestSup
         createGrade(teacherToken, BigDecimal.valueOf(4.5), "Good", studentId, testId);
         Long gradeId = gradeRepository.findGradeByStudentIdAndTestId(studentId, testId).orElseThrow().getId();
 
+        String otherTeacherEmail = uniqueEmail("other-teacher");
+        registerUser(otherTeacherEmail, "teacher456", "Other", "Teacher", UserRole.TEACHER)
+                .andExpect(status().isCreated());
+        String otherTeacherToken = login(otherTeacherEmail, "teacher456");
+
+        String otherTestName = "Other-Test-" + System.nanoTime();
+        createTest(otherTeacherToken, otherTestName, TestCategory.QUIZ,
+                LocalDate.now().plusDays(8), classId, subjectId);
+        Long otherTestId = testRepository.findByName(otherTestName).orElseThrow().getId();
+        createGrade(otherTeacherToken, BigDecimal.valueOf(3.5), "Other", studentId, otherTestId);
+        Long otherGradeId = gradeRepository.findGradeByStudentIdAndTestId(studentId, otherTestId)
+                .orElseThrow()
+                .getId();
+
+        getWithToken("/api/grades", teacherToken)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)));
+        getWithToken("/api/grades", otherTeacherToken)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)));
+        getWithToken("/api/grades/" + otherGradeId, teacherToken)
+                .andExpect(status().isForbidden());
+        deleteWithToken("/api/grades/" + otherGradeId, teacherToken)
+                .andExpect(status().isForbidden());
+        getWithToken("/api/grades/" + otherGradeId, otherTeacherToken)
+                .andExpect(status().isOk());
+
         // Business rule: one grade per student + test
         createGradeRaw(teacherToken, BigDecimal.valueOf(5.0), "Duplicate", studentId, testId)
                 .andExpect(status().isConflict());
@@ -67,6 +96,6 @@ public class GradeCrudBusinessRuleIntegrationTest extends RestIntegrationTestSup
                 .andExpect(status().isOk());
 
         getWithToken("/api/grades/" + gradeId, teacherToken)
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
     }
 }

@@ -14,6 +14,12 @@ public final class GradeSpecifications {
 
     public static Specification<Grade> withFilters(Long studentId, Long testId,
                                                    Instant createdFrom, Instant createdTo) {
+        return withFilters(studentId, testId, createdFrom, createdTo, null);
+    }
+
+    public static Specification<Grade> withFilters(Long studentId, Long testId,
+                                                   Instant createdFrom, Instant createdTo,
+                                                   Long teacherId) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -23,6 +29,10 @@ public final class GradeSpecifications {
 
             if (testId != null) {
                 predicates.add(cb.equal(root.get("test").get("id"), testId));
+            }
+
+            if (teacherId != null) {
+                predicates.add(cb.equal(root.get("test").get("teacher").get("id"), teacherId));
             }
 
             if (createdFrom != null) {

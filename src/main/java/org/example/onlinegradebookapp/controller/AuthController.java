@@ -22,6 +22,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,6 +52,7 @@ public class AuthController {
     }
 
     @PostMapping("/register/user")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Register a new user(TEACHER)",
     description = "Create a new user in database")
     public ResponseEntity<User> registerUser(@Valid @RequestBody UserRegistrationDto dto) {

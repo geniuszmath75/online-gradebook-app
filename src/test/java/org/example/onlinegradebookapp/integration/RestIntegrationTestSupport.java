@@ -3,6 +3,7 @@ package org.example.onlinegradebookapp.integration;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.onlinegradebookapp.entity.TestCategory.TestCategory;
+import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.payload.request.*;
 import org.example.onlinegradebookapp.repository.*;
@@ -11,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -52,6 +54,9 @@ public abstract class RestIntegrationTestSupport {
     @Autowired
     protected GradeRepository gradeRepository;
 
+    @Autowired
+    protected PasswordEncoder passwordEncoder;
+
     protected static final String SHARED_ADMIN_EMAIL = "it-shared-admin@example.com";
     protected static final String SHARED_ADMIN_PASSWORD = "admin123";
 
@@ -64,8 +69,13 @@ public abstract class RestIntegrationTestSupport {
      */
     protected String ensureAdminToken() throws Exception {
         if (userRepository.countByRole(UserRole.ADMIN) == 0) {
-            registerUser(SHARED_ADMIN_EMAIL, SHARED_ADMIN_PASSWORD, "IT", "Admin", UserRole.ADMIN)
-                    .andExpect(status().isCreated());
+            User admin = new User();
+            admin.setEmail(SHARED_ADMIN_EMAIL);
+            admin.setPassword(passwordEncoder.encode(SHARED_ADMIN_PASSWORD));
+            admin.setFirstName("IT");
+            admin.setLastName("Admin");
+            admin.setUserRole(UserRole.ADMIN);
+            userRepository.saveAndFlush(admin);
             return login(SHARED_ADMIN_EMAIL, SHARED_ADMIN_PASSWORD);
         }
         if (Boolean.TRUE.equals(userRepository.existsByEmail(SHARED_ADMIN_EMAIL))) {
@@ -127,9 +137,7 @@ public abstract class RestIntegrationTestSupport {
         dto.setLastName(lastName);
         dto.setRole(role);
 
-        return mockMvc.perform(post("/api/auth/register/user")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto)));
+        return postWithToken("/api/auth/register/user", ensureAdminToken(), dto);
     }
 
     protected ResultActions registerStudent(String email, String password, String firstName, String lastName) throws Exception {

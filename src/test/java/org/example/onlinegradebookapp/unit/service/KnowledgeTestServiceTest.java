@@ -8,8 +8,8 @@ import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ConflictException;
+import org.example.onlinegradebookapp.exception.ForbiddenException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
-import org.example.onlinegradebookapp.exception.UnauthorizedException;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestDto;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestUpdateDto;
 import org.example.onlinegradebookapp.repository.KnowledgeTestRepository;
@@ -151,7 +151,7 @@ public class KnowledgeTestServiceTest {
         when(userService.getCurrentUserId()).thenReturn(2L);
         when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
 
-        assertThrows(UnauthorizedException.class, () -> testService.updateKnowledgeTestAttributes(dto, 1L));
+        assertThrows(ForbiddenException.class, () -> testService.updateKnowledgeTestAttributes(dto, 1L));
     }
 
     @Test
@@ -183,7 +183,7 @@ public class KnowledgeTestServiceTest {
         when(userService.getCurrentUserId()).thenReturn(2L);
         when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
 
-        assertThrows(UnauthorizedException.class, () -> testService.deleteKnowledgeTest(1L));
+        assertThrows(ForbiddenException.class, () -> testService.deleteKnowledgeTest(1L));
     }
 
     @Test

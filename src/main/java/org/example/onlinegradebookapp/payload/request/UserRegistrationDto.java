@@ -2,6 +2,7 @@ package org.example.onlinegradebookapp.payload.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
@@ -24,6 +25,7 @@ public class UserRegistrationDto {
     @NotBlank(message = "Lastname cannot be empty")
     private String lastName;
 
+    @NotNull(message = "Role cannot be null")
     private UserRole role;
 
     private Long classId;

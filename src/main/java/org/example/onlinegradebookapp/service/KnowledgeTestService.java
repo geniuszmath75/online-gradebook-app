@@ -7,8 +7,8 @@ import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ConflictException;
+import org.example.onlinegradebookapp.exception.ForbiddenException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
-import org.example.onlinegradebookapp.exception.UnauthorizedException;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestDto;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestUpdateDto;
 import org.example.onlinegradebookapp.repository.KnowledgeTestRepository;
@@ -131,7 +131,7 @@ public class KnowledgeTestService {
                 }
                 return knowledgeTestRepository.save(test);
             } else {
-                throw new UnauthorizedException("You are not authorized to update knowledge test that you did not create");
+                throw new ForbiddenException("You are not authorized to update this knowledge test");
             }
         } else {
             throw new ResourceNotFoundException("Knowledge test with id=" + id + " not found");
@@ -152,7 +152,7 @@ public class KnowledgeTestService {
 
         // Only ADMIN or user who created test can delete it
         if(!test.getTeacher().getId().equals(currentUserId) && !isAdmin) {
-            throw new UnauthorizedException("You are not authorized to delete this knowledge test");
+            throw new ForbiddenException("You are not authorized to delete this knowledge test");
         }
 
         knowledgeTestRepository.deleteById(id);
