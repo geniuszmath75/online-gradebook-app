@@ -3,6 +3,7 @@ package org.example.onlinegradebookapp.integration;
 import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.junit.jupiter.api.Test;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -45,5 +46,10 @@ public class RoleAccessDenialIntegrationTest extends RestIntegrationTestSupport 
         // Admin still can manage users
         getWithToken("/api/users", adminToken)
                 .andExpect(status().isOk());
+
+        getWithToken("/api/students", teacherToken)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page.totalPages").exists())
+                .andExpect(jsonPath("$.content").exists());
     }
 }

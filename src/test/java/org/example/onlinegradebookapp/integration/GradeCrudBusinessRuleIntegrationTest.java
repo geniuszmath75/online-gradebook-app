@@ -68,10 +68,20 @@ public class GradeCrudBusinessRuleIntegrationTest extends RestIntegrationTestSup
 
         getWithToken("/api/grades", teacherToken)
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(1)));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.page.number").value(0))
+                .andExpect(jsonPath("$.page.size").value(10))
+                .andExpect(jsonPath("$.page.totalElements").value(1))
+                .andExpect(jsonPath("$.page.totalPages").value(1));
         getWithToken("/api/grades", otherTeacherToken)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)));
+        getWithToken("/api/knowledge_tests", teacherToken)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
+        getWithToken("/api/knowledge_tests", otherTeacherToken)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
         getWithToken("/api/grades/" + otherGradeId, teacherToken)
                 .andExpect(status().isForbidden());
         deleteWithToken("/api/grades/" + otherGradeId, teacherToken)
