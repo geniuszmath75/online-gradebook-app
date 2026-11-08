@@ -6,7 +6,9 @@ import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.SchoolClassDto;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,11 +62,29 @@ public class SchoolClassService {
     }
 
     // Delete a school class with given ID
+    @Transactional
     public void deleteSchoolClass(Long id) {
-        if(schoolClassRepository.existsById(id)) {
-            schoolClassRepository.deleteById(id);
-        } else {
-            throw new ResourceNotFoundException("School class with id=" + id + " not found");
+        SchoolClass schoolClass = schoolClassRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("School class with id=" + id + " not found"));
+
+        List<String> dependencies = new ArrayList<>();
+        if (schoolClass.getTeacher() != null) {
+            dependencies.add("teacher");
         }
+        if (!schoolClass.getStudents().isEmpty()) {
+            dependencies.add("students");
+        }
+        if (!schoolClass.getTests().isEmpty()) {
+            dependencies.add("tests");
+        }
+
+        if (!dependencies.isEmpty()) {
+            throw new ConflictException(
+                    "Cannot delete school class with id=" + id
+                            + " because it has related " + String.join(", ", dependencies)
+            );
+        }
+
+        schoolClassRepository.delete(schoolClass);
     }
 }

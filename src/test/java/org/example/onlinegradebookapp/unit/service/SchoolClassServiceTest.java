@@ -1,6 +1,9 @@
 package org.example.onlinegradebookapp.unit.service;
 
+import org.example.onlinegradebookapp.entity.KnowledgeTest;
 import org.example.onlinegradebookapp.entity.SchoolClass;
+import org.example.onlinegradebookapp.entity.Student;
+import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
@@ -122,19 +125,69 @@ public class SchoolClassServiceTest {
 
     @Test
     void deleteSchoolClass_shouldDelete_whenExists() {
-        when(classRepository.existsById(1L)).thenReturn(true);
+        SchoolClass schoolClass = new SchoolClass();
+        schoolClass.setId(1L);
+        when(classRepository.findById(1L)).thenReturn(Optional.of(schoolClass));
 
         classService.deleteSchoolClass(1L);
 
-        verify(classRepository).deleteById(1L);
+        verify(classRepository).delete(schoolClass);
     }
 
     @Test
     void deleteSchoolClass_shouldThrowException_whenNotExists() {
-        when(classRepository.existsById(1L)).thenReturn(false);
+        when(classRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> classService.deleteSchoolClass(1L));
-        verify(classRepository, never()).deleteById(anyLong());
+        verify(classRepository, never()).delete(any(SchoolClass.class));
+    }
+
+    @Test
+    void deleteSchoolClass_shouldReject_whenTeacherIsAssigned() {
+        SchoolClass schoolClass = new SchoolClass();
+        schoolClass.setId(1L);
+        schoolClass.setTeacher(new User());
+        when(classRepository.findById(1L)).thenReturn(Optional.of(schoolClass));
+
+        ConflictException exception = assertThrows(
+                ConflictException.class,
+                () -> classService.deleteSchoolClass(1L)
+        );
+
+        assertEquals("Cannot delete school class with id=1 because it has related teacher", exception.getMessage());
+        verify(classRepository, never()).delete(any(SchoolClass.class));
+    }
+
+    @Test
+    void deleteSchoolClass_shouldReject_whenStudentsAreAssigned() {
+        SchoolClass schoolClass = new SchoolClass();
+        schoolClass.setId(1L);
+        schoolClass.getStudents().add(new Student());
+        when(classRepository.findById(1L)).thenReturn(Optional.of(schoolClass));
+
+        ConflictException exception = assertThrows(
+                ConflictException.class,
+                () -> classService.deleteSchoolClass(1L)
+        );
+
+        assertEquals("Cannot delete school class with id=1 because it has related students", exception.getMessage());
+        verify(classRepository, never()).delete(any(SchoolClass.class));
+    }
+
+    @Test
+    void deleteSchoolClass_shouldReject_whenTestsAreAssigned() {
+        SchoolClass schoolClass = new SchoolClass();
+        schoolClass.setId(1L);
+        schoolClass.getTests().add(new KnowledgeTest());
+        when(classRepository.findById(1L)).thenReturn(Optional.of(schoolClass));
+
+        ConflictException exception = assertThrows(
+                ConflictException.class,
+                () -> classService.deleteSchoolClass(1L)
+        );
+
+        assertEquals("Cannot delete school class with id=1 because it has related tests", exception.getMessage());
+        verify(classRepository, never()).delete(any(SchoolClass.class));
     }
 
 }
