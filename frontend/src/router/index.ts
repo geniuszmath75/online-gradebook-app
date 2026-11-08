@@ -4,7 +4,10 @@ import ClassesView from '@/views/ClassesView.vue'
 import GradesView from '@/views/GradesView.vue'
 import LoginView from '@/views/LoginView.vue'
 import ProfileView from '@/views/ProfileView.vue'
+import SubjectsView from '@/views/SubjectsView.vue'
 import StudentsView from '@/views/StudentsView.vue'
+import TestsView from '@/views/TestsView.vue'
+import UsersView from '@/views/UsersView.vue'
 
 function defaultAuthenticatedRoute() {
   const auth = useAuthStore()
@@ -45,10 +48,28 @@ const router = createRouter({
       meta: { requiresAuth: true, staffOnly: true },
     },
     {
+      path: '/tests',
+      name: 'tests',
+      component: TestsView,
+      meta: { requiresAuth: true, staffOnly: true },
+    },
+    {
       path: '/classes',
       name: 'classes',
       component: ClassesView,
       meta: { requiresAuth: true, staffOnly: true },
+    },
+    {
+      path: '/subjects',
+      name: 'subjects',
+      component: SubjectsView,
+      meta: { requiresAuth: true, adminOnly: true },
+    },
+    {
+      path: '/users',
+      name: 'users',
+      component: UsersView,
+      meta: { requiresAuth: true, adminOnly: true },
     },
     {
       path: '/profile',
@@ -85,6 +106,10 @@ router.beforeEach((to) => {
   }
 
   if (to.meta.staffOnly && !auth.isStaff) {
+    return defaultAuthenticatedRoute() ?? { name: 'login' }
+  }
+
+  if (to.meta.adminOnly && !auth.isAdmin) {
     return defaultAuthenticatedRoute() ?? { name: 'login' }
   }
 

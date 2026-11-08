@@ -32,6 +32,7 @@ public class UserController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all users (teachers)",
             description = "Get a list of all users (teachers) from the database")
     public ResponseEntity<List<User>> getAllUsers() {

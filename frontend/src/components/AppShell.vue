@@ -19,7 +19,10 @@ async function onLogout() {
       <nav v-if="auth.isStaff" class="nav">
         <RouterLink :to="{ name: 'students' }">Students</RouterLink>
         <RouterLink :to="{ name: 'grades' }">Grades</RouterLink>
+        <RouterLink :to="{ name: 'tests' }">Tests</RouterLink>
         <RouterLink :to="{ name: 'classes' }">Classes</RouterLink>
+        <RouterLink v-if="auth.isAdmin" :to="{ name: 'subjects' }">Subjects</RouterLink>
+        <RouterLink v-if="auth.isAdmin" :to="{ name: 'users' }">Users</RouterLink>
       </nav>
       <nav v-else class="nav">
         <RouterLink :to="{ name: 'profile' }">My profile</RouterLink>

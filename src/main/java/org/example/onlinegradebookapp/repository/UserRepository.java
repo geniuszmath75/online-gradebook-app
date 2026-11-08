@@ -17,4 +17,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Count number of users with given ROLE
     Long countByRole(UserRole role);
+
+    boolean existsBySchoolClassId(Long schoolClassId);
 }

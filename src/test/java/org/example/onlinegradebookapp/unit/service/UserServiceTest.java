@@ -190,6 +190,23 @@ public class UserServiceTest {
     }
 
     @Test
+    void register_shouldRejectClass_whenTeacherAlreadyAssigned() {
+        Long classId = 1L;
+        SchoolClass schoolClass = new SchoolClass();
+        schoolClass.setId(classId);
+        registrationDto.setClassId(classId);
+
+        when(classRepository.findById(classId)).thenReturn(Optional.of(schoolClass));
+        when(userRepository.existsByEmail(registrationDto.getEmail())).thenReturn(false);
+        when(userRepository.existsBySchoolClassId(classId)).thenReturn(true);
+
+        assertThatThrownBy(() -> userService.register(registrationDto))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("Class with id=1 already has an assigned teacher");
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
     void register_shouldThrowBadRequest_whenClassIdNotFound() {
         Long classId = 99L;
         registrationDto.setClassId(classId);

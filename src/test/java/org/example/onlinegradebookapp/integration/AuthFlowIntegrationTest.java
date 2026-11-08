@@ -64,4 +64,38 @@ public class AuthFlowIntegrationTest extends RestIntegrationTestSupport {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void shouldRejectRegisteringSecondTeacherForSameClass() throws Exception {
+        String adminToken = ensureAdminToken();
+        String className = "Teacher-Conflict-" + System.nanoTime();
+        createClass(adminToken, className);
+        Long classId = classRepository.findByName(className).orElseThrow().getId();
+
+        UserRegistrationDto first = new UserRegistrationDto();
+        first.setEmail(uniqueEmail("first-class-teacher"));
+        first.setPassword("teacher123");
+        first.setFirstName("First");
+        first.setLastName("Teacher");
+        first.setRole(UserRole.TEACHER);
+        first.setClassId(classId);
+        postWithToken("/api/auth/register/user", adminToken, first)
+                .andExpect(status().isCreated());
+
+        UserRegistrationDto second = new UserRegistrationDto();
+        second.setEmail(uniqueEmail("second-class-teacher"));
+        second.setPassword("teacher123");
+        second.setFirstName("Second");
+        second.setLastName("Teacher");
+        second.setRole(UserRole.TEACHER);
+        second.setClassId(classId);
+        postWithToken("/api/auth/register/user", adminToken, second)
+                .andExpect(status().isConflict());
+
+        Long firstTeacherId = userRepository.findByEmail(first.getEmail()).orElseThrow().getId();
+        deleteWithToken("/api/users/" + firstTeacherId, adminToken)
+                .andExpect(status().isOk());
+        deleteWithToken("/api/classes/" + classId, adminToken)
+                .andExpect(status().isOk());
+    }
 }

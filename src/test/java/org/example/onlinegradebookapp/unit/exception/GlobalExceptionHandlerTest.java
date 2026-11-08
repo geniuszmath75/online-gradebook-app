@@ -7,6 +7,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -78,6 +79,19 @@ public class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(Objects.requireNonNull(response.getBody()).getStatus()).isEqualTo(409);
         assertThat(response.getBody().getMessage()).isEqualTo(message);
+    }
+
+    @Test
+    void shouldReturnConflict_whenDataIntegrityViolationOccurs() {
+        ResponseEntity<ApiError> response = handler.handleDataIntegrityViolation(
+                new DataIntegrityViolationException("duplicate key")
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(Objects.requireNonNull(response.getBody()).getStatus()).isEqualTo(409);
+        assertThat(response.getBody().getMessage())
+                .isEqualTo("The requested operation conflicts with existing data.");
     }
 
     @Test

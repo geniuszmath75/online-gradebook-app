@@ -1,6 +1,7 @@
 package org.example.onlinegradebookapp.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -80,5 +81,15 @@ public class KnowledgeTest {
             case CLASSWORK -> this.categoryName = new ClassworkCategory();
             case OTHER -> this.categoryName = new OtherCategory();
         }
+    }
+
+    @JsonGetter("classId")
+    public Long jsonClassId() {
+        return schoolClass != null ? schoolClass.getId() : null;
+    }
+
+    @JsonGetter("subjectId")
+    public Long jsonSubjectId() {
+        return subject != null ? subject.getId() : null;
     }
 }

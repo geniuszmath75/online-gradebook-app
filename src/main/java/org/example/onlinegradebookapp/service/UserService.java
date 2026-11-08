@@ -78,6 +78,13 @@ public class UserService {
             SchoolClass schoolClass = classRepository
                     .findById(dto.getClassId())
                     .orElseThrow(() -> new BadRequestException("Class with id=" + dto.getClassId() + " not found"));
+
+            if (userRepository.existsBySchoolClassId(dto.getClassId())) {
+                throw new ConflictException(
+                        "Class with id=" + dto.getClassId() + " already has an assigned teacher"
+                );
+            }
+
             user.setSchoolClass(schoolClass);
         }
 

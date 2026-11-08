@@ -54,11 +54,25 @@ public class KnowledgeTestServiceTest {
     @Test
     void findAllKnowledgeTests_shouldReturnList() {
         List<KnowledgeTest> tests = List.of(new KnowledgeTest(), new KnowledgeTest());
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(true);
         when(testRepository.findAll()).thenReturn(tests);
 
         List<KnowledgeTest> result = testService.findAllKnowledgeTests();
 
         assertEquals(2, result.size());
+    }
+
+    @Test
+    void findAllKnowledgeTests_shouldReturnOnlyCurrentTeachersTests() {
+        List<KnowledgeTest> tests = List.of(new KnowledgeTest());
+        when(userService.hasRole(UserRole.ADMIN)).thenReturn(false);
+        when(userService.getCurrentUserId()).thenReturn(7L);
+        when(testRepository.findAllByTeacherId(7L)).thenReturn(tests);
+
+        List<KnowledgeTest> result = testService.findAllKnowledgeTests();
+
+        assertEquals(tests, result);
+        verify(testRepository).findAllByTeacherId(7L);
     }
 
     @Test

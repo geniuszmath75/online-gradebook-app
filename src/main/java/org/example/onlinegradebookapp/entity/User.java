@@ -1,6 +1,7 @@
 package org.example.onlinegradebookapp.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -85,5 +86,10 @@ public class User {
             case ADMIN -> this.roleName = new AdminRole();
             case TEACHER -> this.roleName = new TeacherRole();
         }
+    }
+
+    @JsonGetter("classId")
+    public Long jsonClassId() {
+        return schoolClass != null ? schoolClass.getId() : null;
     }
 }

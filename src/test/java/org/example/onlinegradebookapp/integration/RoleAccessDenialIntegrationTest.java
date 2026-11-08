@@ -37,6 +37,8 @@ public class RoleAccessDenialIntegrationTest extends RestIntegrationTestSupport 
 
         // Teacher cannot delete another user (ADMIN only)
         String teacherToken = login(teacherEmail, "teacher123");
+        getWithToken("/api/users", teacherToken)
+                .andExpect(status().isForbidden());
         deleteWithToken("/api/users/" + teacherId, teacherToken)
                 .andExpect(status().isForbidden());
 

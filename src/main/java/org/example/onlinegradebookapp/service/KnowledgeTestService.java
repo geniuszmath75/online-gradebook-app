@@ -41,7 +41,10 @@ public class KnowledgeTestService {
 
     // Find all knowledge tests
     public List<KnowledgeTest> findAllKnowledgeTests() {
-        return knowledgeTestRepository.findAll();
+        if (userService.hasRole(UserRole.ADMIN)) {
+            return knowledgeTestRepository.findAll();
+        }
+        return knowledgeTestRepository.findAllByTeacherId(userService.getCurrentUserId());
     }
 
     // Find knowledge test with given ID

@@ -34,6 +34,33 @@ export interface SchoolClass {
   name: string
 }
 
+export interface Subject {
+  id: number
+  name: string
+}
+
+export interface SubjectRequest {
+  name: string
+}
+
+export interface User {
+  id: number
+  email: string
+  firstName: string
+  lastName: string
+  role: Exclude<UserRole, 'STUDENT' | 'UNKNOWN'>
+  classId?: number | null
+}
+
+export interface UserCreateRequest {
+  email: string
+  password: string
+  firstName: string
+  lastName: string
+  role: 'ADMIN' | 'TEACHER'
+  classId?: number | null
+}
+
 export interface Student {
   id: number
   email: string
@@ -86,6 +113,24 @@ export interface KnowledgeTest {
   name: string
   category: string
   testDate: string
+  classId?: number | null
+  subjectId?: number | null
+}
+
+export interface KnowledgeTestCreateRequest {
+  name: string
+  category: string
+  testDate: string
+  classId: number
+  subjectId: number
+}
+
+export interface KnowledgeTestUpdateRequest {
+  name?: string
+  category?: string
+  testDate?: string
+  classId?: number
+  subjectId?: number
 }
 
 export interface ClassCreateRequest {
