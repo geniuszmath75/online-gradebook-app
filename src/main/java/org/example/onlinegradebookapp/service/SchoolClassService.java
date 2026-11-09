@@ -4,6 +4,7 @@ import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.SchoolClassDto;
+import org.example.onlinegradebookapp.payload.response.SchoolClassResponse;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,10 +26,21 @@ public class SchoolClassService {
         return schoolClassRepository.findAll();
     }
 
+    // Finds school classes using a scalar projection so inverse relationships are not initialized.
+    public List<SchoolClassResponse> findAllSchoolClassResponses() {
+        return schoolClassRepository.findAllResponses();
+    }
+
     // Finds a school class with given ID
     public SchoolClass findSchoolClassById(Long id) {
         return schoolClassRepository
                 .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("School class with id = "+id+" not found"));
+    }
+
+    public SchoolClassResponse findSchoolClassResponseById(Long id) {
+        return schoolClassRepository
+                .findResponseById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("School class with id = "+id+" not found"));
     }
 

@@ -4,6 +4,7 @@ import org.example.onlinegradebookapp.controller.SubjectController;
 import org.example.onlinegradebookapp.entity.Subject;
 import org.example.onlinegradebookapp.payload.request.SubjectDto;
 import org.example.onlinegradebookapp.payload.response.MessageResponse;
+import org.example.onlinegradebookapp.payload.response.ResponseMapper;
 import org.example.onlinegradebookapp.service.SubjectService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ public class SubjectControllerTest {
         ResponseEntity<?> response = subjectController.getAllSubjects();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(subjects, response.getBody());
+        assertEquals(subjects.stream().map(ResponseMapper::toSubject).toList(), response.getBody());
         verify(subjectService, times(1)).findAllSubjects();
     }
 
@@ -47,7 +48,7 @@ public class SubjectControllerTest {
         ResponseEntity<?> response = subjectController.getSubjectById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(subject, response.getBody());
+        assertEquals(ResponseMapper.toSubject(subject), response.getBody());
         verify(subjectService, times(1)).findSubjectById(1L);
     }
 
@@ -63,7 +64,7 @@ public class SubjectControllerTest {
         ResponseEntity<?> response = subjectController.createSubject(dto);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(created, response.getBody());
+        assertEquals(ResponseMapper.toSubject(created), response.getBody());
         verify(subjectService, times(1)).addSubject(dto);
     }
 
@@ -79,7 +80,7 @@ public class SubjectControllerTest {
         ResponseEntity<?> response = subjectController.updateSubject(1L, dto);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(updated, response.getBody());
+        assertEquals(ResponseMapper.toSubject(updated), response.getBody());
         verify(subjectService, times(1)).updateSubject(dto, 1L);
     }
 

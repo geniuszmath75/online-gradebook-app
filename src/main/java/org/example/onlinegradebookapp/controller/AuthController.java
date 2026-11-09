@@ -4,12 +4,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.example.onlinegradebookapp.entity.Student;
-import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.exception.UnauthorizedException;
 import org.example.onlinegradebookapp.payload.request.LoginDto;
 import org.example.onlinegradebookapp.payload.request.StudentRegistrationDto;
 import org.example.onlinegradebookapp.payload.request.UserRegistrationDto;
+import org.example.onlinegradebookapp.payload.response.ResponseMapper;
+import org.example.onlinegradebookapp.payload.response.StudentResponse;
+import org.example.onlinegradebookapp.payload.response.UserResponse;
 import org.example.onlinegradebookapp.security.CustomUserDetails;
 import org.example.onlinegradebookapp.security.JwtService;
 import org.example.onlinegradebookapp.service.CustomUserDetailsService;
@@ -55,16 +56,16 @@ public class AuthController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Register a new user(TEACHER)",
     description = "Create a new user in database")
-    public ResponseEntity<User> registerUser(@Valid @RequestBody UserRegistrationDto dto) {
-        User created = userService.register(dto);
+    public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody UserRegistrationDto dto) {
+        UserResponse created = ResponseMapper.toUser(userService.register(dto));
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PostMapping("/register/student")
     @Operation(summary = "Register a new student",
             description = "Create a new student in database")
-    public ResponseEntity<Student> registerStudent(@Valid @RequestBody StudentRegistrationDto dto) {
-        Student created = studentService.register(dto);
+    public ResponseEntity<StudentResponse> registerStudent(@Valid @RequestBody StudentRegistrationDto dto) {
+        StudentResponse created = ResponseMapper.toStudent(studentService.register(dto));
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 

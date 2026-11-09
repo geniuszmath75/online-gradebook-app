@@ -7,6 +7,7 @@ import org.example.onlinegradebookapp.exception.UnauthorizedException;
 import org.example.onlinegradebookapp.payload.request.LoginDto;
 import org.example.onlinegradebookapp.payload.request.StudentRegistrationDto;
 import org.example.onlinegradebookapp.payload.request.UserRegistrationDto;
+import org.example.onlinegradebookapp.payload.response.ResponseMapper;
 import org.example.onlinegradebookapp.security.CustomUserDetails;
 import org.example.onlinegradebookapp.security.JwtService;
 import org.example.onlinegradebookapp.service.CustomUserDetailsService;
@@ -57,7 +58,7 @@ public class AuthControllerTest {
 
         verify(userService).register(dto);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(created, response.getBody());
+        assertEquals(ResponseMapper.toUser(created), response.getBody());
     }
 
     @Test
@@ -71,7 +72,7 @@ public class AuthControllerTest {
 
         verify(studentService).register(dto);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(created, response.getBody());
+        assertEquals(ResponseMapper.toStudent(created), response.getBody());
     }
 
     @Test

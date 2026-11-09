@@ -5,6 +5,7 @@ import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.StudentUpdateDto;
 import org.example.onlinegradebookapp.payload.response.MessageResponse;
+import org.example.onlinegradebookapp.payload.response.ResponseMapper;
 import org.example.onlinegradebookapp.service.StudentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,10 +44,10 @@ public class StudentControllerTest {
         Page<Student> page = new PageImpl<>(students, pageable, students.size());
         when(studentService.findAllStudents(1L, "gmail", pageable)).thenReturn(page);
 
-        ResponseEntity<Page<Student>> response = studentController.getAllStudents(1L, "gmail", pageable);
+        ResponseEntity<?> response = studentController.getAllStudents(1L, "gmail", pageable);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(page, response.getBody());
+        assertEquals(page.map(ResponseMapper::toStudent), response.getBody());
         verify(studentService, times(1)).findAllStudents(1L, "gmail", pageable);
     }
 
@@ -62,7 +63,7 @@ public class StudentControllerTest {
         ResponseEntity<?> response = studentController.getStudentById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(student, response.getBody());
+        assertEquals(ResponseMapper.toStudentDetail(student), response.getBody());
         verify(studentService, times(1)).findStudentById(1L);
     }
 
@@ -82,7 +83,7 @@ public class StudentControllerTest {
         ResponseEntity<?> response = studentController.updateStudent(1L, dto, bindingResult);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(updated, response.getBody());
+        assertEquals(ResponseMapper.toStudent(updated), response.getBody());
         verify(studentService, times(1)).updateStudentAttributes(dto, 1L);
     }
 

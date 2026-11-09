@@ -8,10 +8,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.example.onlinegradebookapp.entity.User;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.UserUpdateDto;
 import org.example.onlinegradebookapp.payload.response.MessageResponse;
+import org.example.onlinegradebookapp.payload.response.ResponseMapper;
+import org.example.onlinegradebookapp.payload.response.UserResponse;
 import org.example.onlinegradebookapp.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,8 +36,10 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all users (teachers)",
             description = "Get a list of all users (teachers) from the database")
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.findAllUsers();
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> users = userService.findAllUsers().stream()
+                .map(ResponseMapper::toUser)
+                .toList();
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
@@ -44,10 +47,10 @@ public class UserController {
     @PreAuthorize(value = "hasRole('ADMIN') or #id == authentication.principal.id")
     @Operation(summary = "Get a single user (teacher)",
             description = "Get a single user (teacher) with given ID",
-            responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = User.class)))})
+            responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = UserResponse.class)))})
     @Parameter(in = ParameterIn.PATH, name = "id", description = "User ID")
-    public ResponseEntity<User> getUserById(@PathVariable long id) {
-        User user = userService.findUserById(id);
+    public ResponseEntity<UserResponse> getUserById(@PathVariable long id) {
+        UserResponse user = ResponseMapper.toUser(userService.findUserById(id));
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -56,12 +59,12 @@ public class UserController {
     @Operation(summary = "Update attributes of the single user",
             description = "Update attributes of the single user with given ID")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "User ID")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDto dto,
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDto dto,
                                            BindingResult bindingResult) {
         if(bindingResult.hasErrors()) {
             throw new BadRequestException(bindingResult.getAllErrors().get(0).getDefaultMessage());
         }
-        User updated = userService.updateUserAttributes(dto, id);
+        UserResponse updated = ResponseMapper.toUser(userService.updateUserAttributes(dto, id));
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 

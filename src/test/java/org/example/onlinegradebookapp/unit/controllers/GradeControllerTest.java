@@ -5,6 +5,7 @@ import org.example.onlinegradebookapp.entity.Grade;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.GradeDto;
 import org.example.onlinegradebookapp.payload.request.GradeUpdateDto;
+import org.example.onlinegradebookapp.payload.response.ResponseMapper;
 import org.example.onlinegradebookapp.payload.response.MessageResponse;
 import org.example.onlinegradebookapp.service.GradeService;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,10 +48,10 @@ public class GradeControllerTest {
         Page<Grade> page = new PageImpl<>(grades, pageable, grades.size());
         when(gradeService.findAllGrades(1L, 2L, null, null, pageable)).thenReturn(page);
 
-        ResponseEntity<Page<Grade>> response = gradeController.getAllGrades(1L, 2L, null, null, pageable);
+        ResponseEntity<?> response = gradeController.getAllGrades(1L, 2L, null, null, pageable);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(page, response.getBody());
+        assertEquals(page.map(ResponseMapper::toGrade), response.getBody());
         verify(gradeService, times(1)).findAllGrades(1L, 2L, null, null, pageable);
     }
 
@@ -62,7 +63,7 @@ public class GradeControllerTest {
         ResponseEntity<?> response = gradeController.getGradeById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(knowledgeTest, response.getBody());
+        assertEquals(ResponseMapper.toGrade(knowledgeTest), response.getBody());
         verify(gradeService, times(1)).findGradeById(1L);
     }
 
@@ -80,7 +81,7 @@ public class GradeControllerTest {
         ResponseEntity<?> response = gradeController.createGrade(dto);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(created, response.getBody());
+        assertEquals(ResponseMapper.toGrade(created), response.getBody());
         verify(gradeService, times(1)).addGrade(dto);
     }
 
@@ -99,7 +100,7 @@ public class GradeControllerTest {
         ResponseEntity<?> response = gradeController.updateGrade(1L, dto, bindingResult);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(updated, response.getBody());
+        assertEquals(ResponseMapper.toGrade(updated), response.getBody());
         verify(gradeService, times(1)).updateGradeAttributes(dto, 1L);
     }
 

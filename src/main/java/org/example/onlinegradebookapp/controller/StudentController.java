@@ -8,10 +8,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.example.onlinegradebookapp.entity.Student;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.StudentUpdateDto;
 import org.example.onlinegradebookapp.payload.response.MessageResponse;
+import org.example.onlinegradebookapp.payload.response.ResponseMapper;
+import org.example.onlinegradebookapp.payload.response.StudentDetailResponse;
+import org.example.onlinegradebookapp.payload.response.StudentResponse;
 import org.example.onlinegradebookapp.service.StudentService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,11 +38,12 @@ public class StudentController {
     @PreAuthorize(value = "hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "Get all students",
             description = "Get a paginated list of students. Optional filters: classId, email (substring). Also: page, size, sort.")
-    public ResponseEntity<Page<Student>> getAllStudents(
+    public ResponseEntity<Page<StudentResponse>> getAllStudents(
             @RequestParam(required = false) Long classId,
             @RequestParam(required = false) String email,
             @PageableDefault(sort = "id") Pageable pageable) {
-        Page<Student> students = studentService.findAllStudents(classId, email, pageable);
+        Page<StudentResponse> students = studentService.findAllStudents(classId, email, pageable)
+                .map(ResponseMapper::toStudent);
         return new ResponseEntity<>(students, HttpStatus.OK);
     }
 
@@ -48,10 +51,10 @@ public class StudentController {
     @PreAuthorize(value = "hasAnyRole('ADMIN', 'TEACHER') or #id == authentication.principal.id")
     @Operation(summary = "Get a single student",
             description = "Get a single student with given ID",
-            responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Student.class)))})
+            responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = StudentDetailResponse.class)))})
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Student ID")
-    public ResponseEntity<Student> getStudentById(@PathVariable long id) {
-        Student student = studentService.findStudentById(id);
+    public ResponseEntity<StudentDetailResponse> getStudentById(@PathVariable long id) {
+        StudentDetailResponse student = ResponseMapper.toStudentDetail(studentService.findStudentById(id));
         return new ResponseEntity<>(student, HttpStatus.OK);
     }
 
@@ -60,12 +63,12 @@ public class StudentController {
     @Operation(summary = "Update attributes of the single student",
             description = "Update attributes of the single student with given ID")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Student ID")
-    public ResponseEntity<Student> updateStudent(@PathVariable Long id, @Valid @RequestBody StudentUpdateDto dto,
+    public ResponseEntity<StudentResponse> updateStudent(@PathVariable Long id, @Valid @RequestBody StudentUpdateDto dto,
                                                  BindingResult bindingResult) {
         if(bindingResult.hasErrors()) {
             throw new BadRequestException(bindingResult.getAllErrors().get(0).getDefaultMessage());
         }
-        Student updated = studentService.updateStudentAttributes(dto, id);
+        StudentResponse updated = ResponseMapper.toStudent(studentService.updateStudentAttributes(dto, id));
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 

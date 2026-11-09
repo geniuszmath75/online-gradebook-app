@@ -8,6 +8,7 @@ import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.exception.ConflictException;
 import org.example.onlinegradebookapp.exception.ResourceNotFoundException;
 import org.example.onlinegradebookapp.payload.request.SchoolClassDto;
+import org.example.onlinegradebookapp.payload.response.SchoolClassResponse;
 import org.example.onlinegradebookapp.repository.SchoolClassRepository;
 import org.example.onlinegradebookapp.service.SchoolClassService;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,34 +35,36 @@ public class SchoolClassServiceTest {
     }
 
     @Test
-    void findAllSchoolClasses_shouldReturnList() {
-        List<SchoolClass> classes = List.of(new SchoolClass(), new SchoolClass());
-        when(classRepository.findAll()).thenReturn(classes);
+    void findAllSchoolClassResponses_shouldReturnList() {
+        List<SchoolClassResponse> classes = List.of(
+                new SchoolClassResponse(1L, "1A", null, null),
+                new SchoolClassResponse(2L, "1B", null, null)
+        );
+        when(classRepository.findAllResponses()).thenReturn(classes);
 
-        List<SchoolClass> result = classService.findAllSchoolClasses();
+        List<SchoolClassResponse> result = classService.findAllSchoolClassResponses();
 
         assertEquals(2, result.size());
-        verify(classRepository).findAll();
+        verify(classRepository).findAllResponses();
     }
 
     @Test
-    void findSchoolClassById_shouldReturnSchoolClass_whenFound() {
-        SchoolClass schoolClass = new SchoolClass();
-        schoolClass.setId(1L);
+    void findSchoolClassResponseById_shouldReturnResponse_whenFound() {
+        SchoolClassResponse schoolClass = new SchoolClassResponse(1L, "1A", null, null);
 
-        when(classRepository.findById(1L)).thenReturn(Optional.of(schoolClass));
+        when(classRepository.findResponseById(1L)).thenReturn(Optional.of(schoolClass));
 
-        SchoolClass result = classService.findSchoolClassById(1L);
+        SchoolClassResponse result = classService.findSchoolClassResponseById(1L);
 
         assertEquals(1L, result.getId());
-        verify(classRepository).findById(1L);
+        verify(classRepository).findResponseById(1L);
     }
 
     @Test
-    void findSchoolClassById_shouldThrowException_whenNotFound() {
-        when(classRepository.findById(1L)).thenReturn(Optional.empty());
+    void findSchoolClassResponseById_shouldThrowException_whenNotFound() {
+        when(classRepository.findResponseById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> classService.findSchoolClassById(1L));
+        assertThrows(ResourceNotFoundException.class, () -> classService.findSchoolClassResponseById(1L));
     }
 
     @Test

@@ -46,7 +46,7 @@ public class Student {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JsonBackReference
     @JoinColumn(name = "class_id")
     private SchoolClass schoolClass;

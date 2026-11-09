@@ -8,9 +8,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.payload.request.SchoolClassDto;
 import org.example.onlinegradebookapp.payload.response.MessageResponse;
+import org.example.onlinegradebookapp.payload.response.ResponseMapper;
+import org.example.onlinegradebookapp.payload.response.SchoolClassResponse;
 import org.example.onlinegradebookapp.service.SchoolClassService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,18 +33,18 @@ public class SchoolClassController {
     @GetMapping
     @Operation(summary = "Get all school classes",
             description = "Get a list of all school classes from the database")
-    public ResponseEntity<List<SchoolClass>> getAllSchoolClasses() {
-        List<SchoolClass> schoolClasses = schoolClassService.findAllSchoolClasses();
+    public ResponseEntity<List<SchoolClassResponse>> getAllSchoolClasses() {
+        List<SchoolClassResponse> schoolClasses = schoolClassService.findAllSchoolClassResponses();
         return new ResponseEntity<>(schoolClasses, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get a single school class",
             description = "Get a single school class with given ID",
-            responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = SchoolClass.class)))})
+            responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = SchoolClassResponse.class)))})
     @Parameter(in = ParameterIn.PATH, name = "id", description = "School class ID")
-    public ResponseEntity<SchoolClass> getSchoolClassById(@PathVariable Long id) {
-        SchoolClass schoolClass = schoolClassService.findSchoolClassById(id);
+    public ResponseEntity<SchoolClassResponse> getSchoolClassById(@PathVariable Long id) {
+        SchoolClassResponse schoolClass = schoolClassService.findSchoolClassResponseById(id);
         return new ResponseEntity<>(schoolClass, HttpStatus.OK);
     }
 
@@ -51,8 +52,8 @@ public class SchoolClassController {
     @PreAuthorize(value = "hasRole('ADMIN')")
     @Operation(summary = "Create a new school class",
             description = "Create a new school class in database")
-    public ResponseEntity<SchoolClass> createSchoolClass(@Valid @RequestBody SchoolClassDto dto) {
-        SchoolClass created = schoolClassService.addSchoolClass(dto);
+    public ResponseEntity<SchoolClassResponse> createSchoolClass(@Valid @RequestBody SchoolClassDto dto) {
+        SchoolClassResponse created = ResponseMapper.toSchoolClass(schoolClassService.addSchoolClass(dto));
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
@@ -61,8 +62,8 @@ public class SchoolClassController {
     @Operation(summary = "Update a single school class",
             description = "Update a single school class with given ID")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "School class ID")
-    public ResponseEntity<SchoolClass> updateSchoolClass(@PathVariable Long id, @Valid @RequestBody SchoolClassDto dto) {
-        SchoolClass updated = schoolClassService.updateSchoolClass(dto, id);
+    public ResponseEntity<SchoolClassResponse> updateSchoolClass(@PathVariable Long id, @Valid @RequestBody SchoolClassDto dto) {
+        SchoolClassResponse updated = ResponseMapper.toSchoolClass(schoolClassService.updateSchoolClass(dto, id));
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 

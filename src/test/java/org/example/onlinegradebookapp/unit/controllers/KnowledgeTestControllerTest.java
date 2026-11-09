@@ -7,6 +7,7 @@ import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestDto;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestUpdateDto;
 import org.example.onlinegradebookapp.payload.response.MessageResponse;
+import org.example.onlinegradebookapp.payload.response.ResponseMapper;
 import org.example.onlinegradebookapp.service.KnowledgeTestService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,7 @@ public class KnowledgeTestControllerTest {
         ResponseEntity<?> response = testController.getAllKnowledgeTests();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(tests, response.getBody());
+        assertEquals(tests.stream().map(ResponseMapper::toKnowledgeTest).toList(), response.getBody());
         verify(testService, times(1)).findAllKnowledgeTests();
     }
 
@@ -55,7 +56,7 @@ public class KnowledgeTestControllerTest {
         ResponseEntity<?> response = testController.getKnowledgeTestById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(knowledgeTest, response.getBody());
+        assertEquals(ResponseMapper.toKnowledgeTest(knowledgeTest), response.getBody());
         verify(testService, times(1)).findKnowledgeTestById(1L);
     }
 
@@ -74,7 +75,7 @@ public class KnowledgeTestControllerTest {
         ResponseEntity<?> response = testController.createKnowledgeTest(dto);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(created, response.getBody());
+        assertEquals(ResponseMapper.toKnowledgeTest(created), response.getBody());
         verify(testService, times(1)).addKnowledgeTest(dto);
     }
 
@@ -95,7 +96,7 @@ public class KnowledgeTestControllerTest {
         ResponseEntity<?> response = testController.updateKnowledgeTest(1L, dto, bindingResult);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(updated, response.getBody());
+        assertEquals(ResponseMapper.toKnowledgeTest(updated), response.getBody());
         verify(testService, times(1)).updateKnowledgeTestAttributes(dto, 1L);
     }
 

@@ -6,6 +6,7 @@ import org.example.onlinegradebookapp.entity.UserRole.UserRole;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.UserUpdateDto;
 import org.example.onlinegradebookapp.payload.response.MessageResponse;
+import org.example.onlinegradebookapp.payload.response.ResponseMapper;
 import org.example.onlinegradebookapp.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +42,7 @@ public class UserControllerTest {
         ResponseEntity<?> response = userController.getAllUsers();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(users, response.getBody());
+        assertEquals(users.stream().map(ResponseMapper::toUser).toList(), response.getBody());
         verify(userService, times(1)).findAllUsers();
     }
 
@@ -58,7 +59,7 @@ public class UserControllerTest {
         ResponseEntity<?> response = userController.getUserById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(user, response.getBody());
+        assertEquals(ResponseMapper.toUser(user), response.getBody());
         verify(userService, times(1)).findUserById(1L);
     }
 
@@ -78,7 +79,7 @@ public class UserControllerTest {
         ResponseEntity<?> response = userController.updateUser(1L, dto, bindingResult);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(updated, response.getBody());
+        assertEquals(ResponseMapper.toUser(updated), response.getBody());
         verify(userService, times(1)).updateUserAttributes(dto, 1L);
     }
 

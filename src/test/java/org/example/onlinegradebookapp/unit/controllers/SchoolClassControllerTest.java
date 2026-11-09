@@ -4,6 +4,8 @@ import org.example.onlinegradebookapp.controller.SchoolClassController;
 import org.example.onlinegradebookapp.entity.SchoolClass;
 import org.example.onlinegradebookapp.payload.request.SchoolClassDto;
 import org.example.onlinegradebookapp.payload.response.MessageResponse;
+import org.example.onlinegradebookapp.payload.response.ResponseMapper;
+import org.example.onlinegradebookapp.payload.response.SchoolClassResponse;
 import org.example.onlinegradebookapp.service.SchoolClassService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,26 +31,29 @@ public class SchoolClassControllerTest {
 
     @Test
     void getAllSchoolClasses_shouldReturnListAndOk() {
-        List<SchoolClass> classes = Arrays.asList(new SchoolClass(), new SchoolClass());
-        when(classService.findAllSchoolClasses()).thenReturn(classes);
+        List<SchoolClassResponse> classes = Arrays.asList(
+                new SchoolClassResponse(1L, "1A", null, null),
+                new SchoolClassResponse(2L, "1B", null, null)
+        );
+        when(classService.findAllSchoolClassResponses()).thenReturn(classes);
 
         ResponseEntity<?> response = classController.getAllSchoolClasses();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(classes, response.getBody());
-        verify(classService, times(1)).findAllSchoolClasses();
+        verify(classService, times(1)).findAllSchoolClassResponses();
     }
 
     @Test
     void getSchoolClassById_shouldReturnClassAndOk() {
-        SchoolClass schoolClass = new SchoolClass();
-        when(classService.findSchoolClassById(1L)).thenReturn(schoolClass);
+        SchoolClassResponse schoolClass = new SchoolClassResponse(1L, "1A", null, null);
+        when(classService.findSchoolClassResponseById(1L)).thenReturn(schoolClass);
 
         ResponseEntity<?> response = classController.getSchoolClassById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(schoolClass, response.getBody());
-        verify(classService, times(1)).findSchoolClassById(1L);
+        verify(classService, times(1)).findSchoolClassResponseById(1L);
     }
 
     @Test
@@ -63,7 +68,7 @@ public class SchoolClassControllerTest {
         ResponseEntity<?> response = classController.createSchoolClass(dto);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(created, response.getBody());
+        assertEquals(ResponseMapper.toSchoolClass(created), response.getBody());
         verify(classService, times(1)).addSchoolClass(dto);
     }
 
@@ -79,7 +84,7 @@ public class SchoolClassControllerTest {
         ResponseEntity<?> response = classController.updateSchoolClass(1L, dto);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(updated, response.getBody());
+        assertEquals(ResponseMapper.toSchoolClass(updated), response.getBody());
         verify(classService, times(1)).updateSchoolClass(dto, 1L);
     }
 

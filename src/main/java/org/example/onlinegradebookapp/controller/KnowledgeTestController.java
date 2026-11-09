@@ -8,11 +8,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.example.onlinegradebookapp.entity.KnowledgeTest;
 import org.example.onlinegradebookapp.exception.BadRequestException;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestDto;
 import org.example.onlinegradebookapp.payload.request.KnowledgeTestUpdateDto;
+import org.example.onlinegradebookapp.payload.response.KnowledgeTestResponse;
 import org.example.onlinegradebookapp.payload.response.MessageResponse;
+import org.example.onlinegradebookapp.payload.response.ResponseMapper;
 import org.example.onlinegradebookapp.service.KnowledgeTestService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,26 +35,28 @@ public class KnowledgeTestController {
     @GetMapping
     @Operation(summary = "Get all knowledge tests for all subjects",
             description = "Get a list of all knowledge tests from the database")
-    public ResponseEntity<List<KnowledgeTest>> getAllKnowledgeTests() {
-        List<KnowledgeTest> knowledgeTests = knowledgeTestService.findAllKnowledgeTests();
+    public ResponseEntity<List<KnowledgeTestResponse>> getAllKnowledgeTests() {
+        List<KnowledgeTestResponse> knowledgeTests = knowledgeTestService.findAllKnowledgeTests().stream()
+                .map(ResponseMapper::toKnowledgeTest)
+                .toList();
         return new ResponseEntity<>(knowledgeTests, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get a single knowledge test",
             description = "Get a single knowledge test with given ID",
-            responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = KnowledgeTest.class)))})
+            responses = {@ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = KnowledgeTestResponse.class)))})
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Knowledge test ID")
-    public ResponseEntity<KnowledgeTest> getKnowledgeTestById(@PathVariable Long id) {
-        KnowledgeTest knowledgeTest = knowledgeTestService.findKnowledgeTestById(id);
+    public ResponseEntity<KnowledgeTestResponse> getKnowledgeTestById(@PathVariable Long id) {
+        KnowledgeTestResponse knowledgeTest = ResponseMapper.toKnowledgeTest(knowledgeTestService.findKnowledgeTestById(id));
         return new ResponseEntity<>(knowledgeTest, HttpStatus.OK);
     }
 
     @PostMapping
     @Operation(summary = "Create a new knowledge test",
             description = "Create a new knowledge test in database")
-    public ResponseEntity<KnowledgeTest> createKnowledgeTest(@Valid @RequestBody KnowledgeTestDto dto) {
-        KnowledgeTest created = knowledgeTestService.addKnowledgeTest(dto);
+    public ResponseEntity<KnowledgeTestResponse> createKnowledgeTest(@Valid @RequestBody KnowledgeTestDto dto) {
+        KnowledgeTestResponse created = ResponseMapper.toKnowledgeTest(knowledgeTestService.addKnowledgeTest(dto));
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
@@ -61,12 +64,12 @@ public class KnowledgeTestController {
     @Operation(summary = "Update attributes of the single knowledge test",
             description = "Update attributes of the single knowledge test with given ID")
     @Parameter(in = ParameterIn.PATH, name = "id", description = "Knowledge test ID")
-    public ResponseEntity<KnowledgeTest> updateKnowledgeTest(@PathVariable Long id, @Valid @RequestBody KnowledgeTestUpdateDto dto,
+    public ResponseEntity<KnowledgeTestResponse> updateKnowledgeTest(@PathVariable Long id, @Valid @RequestBody KnowledgeTestUpdateDto dto,
                                                  BindingResult bindingResult) {
         if(bindingResult.hasErrors()) {
             throw new BadRequestException(bindingResult.getAllErrors().get(0).getDefaultMessage());
         }
-        KnowledgeTest updated = knowledgeTestService.updateKnowledgeTestAttributes(dto, id);
+        KnowledgeTestResponse updated = ResponseMapper.toKnowledgeTest(knowledgeTestService.updateKnowledgeTestAttributes(dto, id));
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 
