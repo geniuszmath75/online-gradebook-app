@@ -233,6 +233,7 @@
 						-Xshare:off
 					</argLine>
 					<includes>
+						<include>**/config/**Test.java</include>
 						<include>**/unit/service/**Test.java</include>
 						<include>**/security/**Test.java</include>
 						<include>**/unit/controllers/**Test.java</include>
