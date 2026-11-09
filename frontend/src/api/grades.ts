@@ -13,6 +13,9 @@ export async function listGrades(params: {
   size?: number
   studentId?: number
   testId?: number
+  createdFrom?: string
+  createdTo?: string
+  sort?: string
 } = {}) {
   const { data } = await http.get<PagePayload<Grade>>('/api/grades', { params })
   return normalizePageResponse(data)

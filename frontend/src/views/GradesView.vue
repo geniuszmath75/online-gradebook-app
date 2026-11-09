@@ -21,6 +21,13 @@ const page = ref(0)
 const pageSize = 5
 const totalPages = ref(0)
 const totalElements = ref(0)
+const filters = reactive({
+  studentId: '',
+  testId: '',
+  createdFrom: '',
+  createdTo: '',
+  sort: 'createdAt,desc',
+})
 
 const createForm = reactive({
   grade: '4.0',
@@ -62,7 +69,15 @@ async function load(requestedPage = page.value) {
   error.value = ''
   try {
     const [gradePage, studentPage, testList] = await Promise.all([
-      listGrades({ page: requestedPage, size: pageSize }),
+      listGrades({
+        page: requestedPage,
+        size: pageSize,
+        studentId: filters.studentId ? Number(filters.studentId) : undefined,
+        testId: filters.testId ? Number(filters.testId) : undefined,
+        createdFrom: filters.createdFrom ? `${filters.createdFrom}T00:00:00Z` : undefined,
+        createdTo: filters.createdTo ? `${filters.createdTo}T23:59:59.999Z` : undefined,
+        sort: filters.sort,
+      }),
       listStudents({ size: 100 }),
       listTests(),
     ])
@@ -77,6 +92,20 @@ async function load(requestedPage = page.value) {
   } finally {
     loading.value = false
   }
+}
+
+async function applyFilters() {
+  page.value = 0
+  await load(0)
+}
+
+async function clearFilters() {
+  filters.studentId = ''
+  filters.testId = ''
+  filters.createdFrom = ''
+  filters.createdTo = ''
+  filters.sort = 'createdAt,desc'
+  await applyFilters()
 }
 
 async function onCreate() {
@@ -214,6 +243,52 @@ onMounted(load)
           <label>Description <input v-model="createForm.description" /></label>
         </div>
         <button type="submit">Create grade</button>
+      </form>
+
+      <form class="panel form" @submit.prevent="applyFilters">
+        <h2>Filter and sort grades</h2>
+        <div class="grid">
+          <label>
+            Student
+            <select v-model="filters.studentId">
+              <option value="">All students</option>
+              <option v-for="student in students" :key="student.id" :value="String(student.id)">
+                {{ student.firstName }} {{ student.lastName }}
+              </option>
+            </select>
+          </label>
+          <label>
+            Test
+            <select v-model="filters.testId">
+              <option value="">All tests</option>
+              <option v-for="test in tests" :key="test.id" :value="String(test.id)">
+                {{ test.name }}
+              </option>
+            </select>
+          </label>
+          <label>
+            From date
+            <input v-model="filters.createdFrom" type="date" />
+          </label>
+          <label>
+            To date
+            <input v-model="filters.createdTo" type="date" />
+          </label>
+          <label>
+            Sort
+            <select v-model="filters.sort">
+              <option value="createdAt,desc">Newest first</option>
+              <option value="createdAt,asc">Oldest first</option>
+              <option value="grade,desc">Grade, high to low</option>
+              <option value="grade,asc">Grade, low to high</option>
+              <option value="id,asc">ID, ascending</option>
+            </select>
+          </label>
+        </div>
+        <div class="inline-form">
+          <button type="submit">Apply filters</button>
+          <button type="button" class="ghost" @click="clearFilters">Clear</button>
+        </div>
       </form>
 
       <div class="panel table-wrap">

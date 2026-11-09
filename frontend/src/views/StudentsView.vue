@@ -21,6 +21,11 @@ const page = ref(0)
 const pageSize = 3
 const totalPages = ref(0)
 const totalElements = ref(0)
+const filters = reactive({
+  email: '',
+  classId: '',
+  sort: 'lastName,asc',
+})
 
 const createForm = reactive({
   email: '',
@@ -59,7 +64,13 @@ async function load(requestedPage = page.value) {
   error.value = ''
   try {
     const [studentPage, classList] = await Promise.all([
-      listStudents({ page: requestedPage, size: pageSize, sort: 'lastName,asc' }),
+      listStudents({
+        page: requestedPage,
+        size: pageSize,
+        email: filters.email.trim() || undefined,
+        classId: filters.classId ? Number(filters.classId) : undefined,
+        sort: filters.sort,
+      }),
       listClasses(),
     ])
     students.value = studentPage.content
@@ -72,6 +83,18 @@ async function load(requestedPage = page.value) {
   } finally {
     loading.value = false
   }
+}
+
+async function applyFilters() {
+  page.value = 0
+  await load(0)
+}
+
+async function clearFilters() {
+  filters.email = ''
+  filters.classId = ''
+  filters.sort = 'lastName,asc'
+  await applyFilters()
 }
 
 async function onCreate() {
@@ -214,6 +237,39 @@ onMounted(load)
           </label>
         </div>
         <button type="submit">Create student</button>
+      </form>
+
+      <form class="panel form" @submit.prevent="applyFilters">
+        <h2>Filter and sort students</h2>
+        <div class="grid">
+          <label>
+            Email
+            <input v-model="filters.email" type="search" placeholder="Search by email" />
+          </label>
+          <label>
+            Class
+            <select v-model="filters.classId">
+              <option value="">All classes</option>
+              <option v-for="item in classes" :key="item.id" :value="String(item.id)">
+                {{ item.name }}
+              </option>
+            </select>
+          </label>
+          <label>
+            Sort
+            <select v-model="filters.sort">
+              <option value="lastName,asc">Last name, A–Z</option>
+              <option value="lastName,desc">Last name, Z–A</option>
+              <option value="firstName,asc">First name, A–Z</option>
+              <option value="email,asc">Email, A–Z</option>
+              <option value="createdAt,desc">Newest first</option>
+            </select>
+          </label>
+        </div>
+        <div class="inline-form">
+          <button type="submit">Apply filters</button>
+          <button type="button" class="ghost" @click="clearFilters">Clear</button>
+        </div>
       </form>
 
       <div class="panel table-wrap">
