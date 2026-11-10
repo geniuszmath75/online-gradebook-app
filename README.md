@@ -1,115 +1,162 @@
-# 📘 Online gradebook app - Spring Boot REST API
+# 📘 Online Gradebook
 
-The REST API application for managing students, teachers, classes, knowledge tests and grades.
-Supports different roles of users (ADMIN, TEACHER) and access control based on roles and identifiers.
+Online Gradebook is a full-stack school gradebook application. The backend exposes a
+Spring Boot REST API for managing users, students, classes, subjects, knowledge tests
+and grades. The Vue frontend consumes that API and provides role-aware screens for
+administrators, teachers and students.
 
 ---
 
 ## Table of contents
 
 1. [Technologies](#-technologies)
-2. [Architecture and design patterns](#-architecture-and-design-patterns)
-3. [Starting application](#-starting-application)
-4. [Database structure](#-database-structure)
-5. [Testing](#-testing)
-6. [Security](#-security)
-7. [Role Permissions](#-role-permissions)
+2. [Architecture](#-architecture)
+3. [Running the application](#-running-the-application)
+4. [Available functionality](#-available-functionality)
+5. [Database structure](#-database-structure)
+6. [API documentation](#-api-documentation)
+7. [Testing](#-testing)
+8. [Security and roles](#-security-and-roles)
 
 ---
 
 ## 🧰 Technologies
 
-- Java 17+
+### Backend
+
+- Java 17
 - Spring Boot
-- Spring Security (JWT)
-- Spring Data JPA
-- PostgresSQL 17
-- Maven 3.4.4
-- TestContainers, JUnit 5
+- Spring Security with JWT
+- Spring Data JPA and Hibernate
+- PostgreSQL 17
+- Flyway database migrations
+- Maven Wrapper
+- JUnit 5, Mockito and Testcontainers
 - Lombok
-- Flyway (database migration)
+
+### Frontend
+
+- Vue 3
+- Vite
+- TypeScript
+- Vue Router
+- Pinia
+- Axios
 
 ---
 
-## ⚙️ Architecture and design patterns
+## ⚙️ Architecture
 
-- Three-layer architecture (Controller - Service - Repository)
-- MVC Design Pattern
-- Repository pattern
-- DTO (Data Transfer Object) pattern
-- Singleton (Spring beans)
+- Three-layer backend architecture: Controller → Service → Repository
+- REST API with request and response DTOs
+- PostgreSQL persistence managed by Spring Data JPA
+- Database schema managed by Flyway; Hibernate runs in validation mode
+- JWT authentication and role-based authorization
+- Vue SPA in `frontend/`, developed independently from the backend
+- Docker Compose runs the backend and PostgreSQL; the frontend runs locally with Vite
 
 ---
 
-## 🚀 Starting application
+## 🚀 Running the application
 
-### Option 1 - locally
+### Prerequisites
 
-#### Requirements
+- Docker and Docker Compose
+- Node.js `^20.19.0` or `>=22.12.0` for the frontend
+- Java 17 only when running the backend outside Docker
 
-- Java 17+
-- Maven 3.4.4+
-- PostgresSQL
+### 1. Configure environment variables
 
-#### Configuration:
+The root `.env` file is used by Docker Compose and the backend. Create it from the
+template and replace every placeholder:
 
-1. Copy environment template and set your own values (DB credentials + JWT secret):
+```shell
+cp .env.example .env
+```
 
-    ```shell
-    cp .env.example .env
-    # edit .env — replace all change-me placeholders
-    ```
+Important variables:
 
-2. Create database and user (use the same credentials as in `.env`):
+- `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` — PostgreSQL database credentials
+- `JWT_SECRET` — Base64-encoded JWT signing secret
+- `CORS_ALLOWED_ORIGINS` — browser origins allowed by the backend
 
-    ```sql
-    CREATE DATABASE online_grade_book;
-    CREATE USER admin WITH PASSWORD 'your-db-password';
-    GRANT ALL PRIVILEGES ON DATABASE online_grade_book TO admin;
-    ```
+The frontend has its own optional configuration:
 
-3. Export variables from `.env` (or set them in your IDE run configuration), then run:
+```shell
+cd frontend
+cp .env.example .env
+```
 
-    ```shell
-    git clone https://github.com/geniuszmath75/online-gradebook-app.git
-    cd online-gradebook-app
-    set -a && source .env && set +a
-    ./mvnw clean install
-    ./mvnw spring-boot:run
-    ```
+Leave `VITE_API_BASE_URL` empty for local development. Vite then proxies `/api`
+requests to `http://localhost:8080`.
 
-`application.properties` reads `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, and `JWT_SECRET` from the environment.
+### 2. Start the backend and database with Docker Compose
 
-### Option 2 - Docker
+Run these commands from the repository root:
 
-#### Requirements
+```shell
+docker compose up --build
+```
 
-- Docker
-- Docker Compose
+Compose starts:
 
-1. Build and run containers
+- PostgreSQL on `localhost:${DB_PORT}` (usually `localhost:5432`)
+- the Spring Boot API on `http://localhost:8080`
 
-   ```shell
-   # Clone repository
-   git clone https://github.com/geniuszmath75/online-gradebook-app.git
-   cd online-gradebook-app
+Flyway creates/validates the schema on startup. Stop the services with
+`Ctrl+C`, or use `docker compose down`. To remove the persisted database volume
+as well, run `docker compose down -v`.
 
-   # Configure secrets (required)
-   cp .env.example .env
-   # edit .env — replace all change-me placeholders
+On a fresh database, the Flyway seed creates demo accounts for local evaluation:
 
-   # Build and run (Compose loads .env automatically)
-   docker compose up --build
-   ```
+- Admin: `admin@gmail.com` / `admin123`
+- Teachers: `teacher.kowalski@example.com`, `teacher.nowak@example.com` or
+  `teacher.wisniewski@example.com` / `teacher123`
+- Students: `student.adamczyk@example.com` and other seeded students /
+  `student123`
 
-**The application is available at: `http://localhost:8080/swagger-ui/index.html`**
+### 3. Start the Vue frontend locally
 
-**Flyway seeds a default ADMIN user**
+In a second terminal:
 
-**ADMIN login details:**
+```shell
+cd frontend
+npm install
+npm run dev
+```
 
-- email: `admin@gmail.com`
-- password: `admin123`
+Open `http://localhost:5173`. The frontend uses the Vite proxy, so no separate
+frontend container is required.
+
+### Running the backend locally
+
+Alternatively, run PostgreSQL separately, export the variables from `.env`, and
+start Spring Boot with the Maven Wrapper:
+
+```shell
+set -a && source .env && set +a
+./mvnw spring-boot:run
+```
+
+## ✨ Available functionality
+
+### Vue frontend
+
+- JWT login and logout
+- Role-aware navigation for `ADMIN`, `TEACHER` and `STUDENT`
+- Student list with pagination, sorting, email/class filters and CRUD operations
+- Grade CRUD with pagination, sorting, student/test/date filters and validation
+- Class list and admin CRUD operations
+- Knowledge test management
+- Admin-only user and subject management
+- Student profile view
+- API error messages displayed in the UI
+
+### REST API
+
+The API supports CRUD operations for users, students, classes, subjects, knowledge
+tests and grades. It also provides pagination/filtering for students and grades,
+request validation, global error responses and role/ownership checks.
 
 ---
 
@@ -119,23 +166,41 @@ Supports different roles of users (ADMIN, TEACHER) and access control based on r
 
 ---
 
-## 🧪 Testing:
+## 📚 API documentation
 
-### Unit and integration tests:
-   ```shell
-   ./mvnw clean verify
-   ```
-#### 1. Unit tests coverage report `target/jacoco-ut/index.html`
+After starting the backend, open:
 
-   ![Unit tests coverage report](src/main/resources/images/unit-tests-coverage.png)
+- Swagger UI: [`http://localhost:8080/swagger-ui/index.html`](http://localhost:8080/swagger-ui/index.html)
+- OpenAPI JSON: [`http://localhost:8080/v3/api-docs`](http://localhost:8080/v3/api-docs)
 
-#### 2. Integration tests coverage report `target/jacoco-it/index.html`
+The API base path is `http://localhost:8080/api`. Login is available at
+`POST /api/auth/login`; the returned JWT is used as a Bearer token for protected
+endpoints. The Swagger UI can be used to inspect and try the REST contract.
 
-![Integration tests coverage report](src/main/resources/images/integration-tests-coverage.png)
+## 🧪 Testing
+
+Run the complete backend test suite:
+
+```shell
+./mvnw clean verify
+```
+
+This runs unit and integration tests, including Testcontainers-based PostgreSQL
+tests. Coverage reports are generated at:
+
+- `target/jacoco-ut/index.html`
+- `target/jacoco-it/index.html`
+
+Frontend checks/build:
+
+```shell
+cd frontend
+npm run build
+```
 
 ---
 
-## 🔐 Security
+## 🔐 Security and roles
 
 - JWT Authentication ([implementation](src/main/java/org/example/onlinegradebookapp/security/JwtService.java))
 - Roles: 
@@ -156,12 +221,14 @@ Supports different roles of users (ADMIN, TEACHER) and access control based on r
 The following table summarizes which roles are allowed to access specific API endpoints.
 
 - ✅ Full access
-- ☑️ Limited access (e.g., only own ID, only own class)
+- ☑️ Limited access (e.g., only own ID, own test or own grade)
 - ❌ No access
 
 > [!NOTE]
 > Some endpoints (e.g., retrieving or updating a user by ID) are role-restricted **by ownership**
 > i.e., teachers and students can only access their own data.
+> The knowledge-test list and grade endpoints additionally limit teachers to tests they authored;
+> `GET /api/knowledge_tests/{id}` is currently unrestricted by author.
 
 | Endpoint                           | ADMIN | TEACHER     | STUDENT     |
 |------------------------------------|-------|-------------|-------------|
@@ -184,12 +251,12 @@ The following table summarizes which roles are allowed to access specific API en
 | `PUT /api/classes/{id}`            | ✅     | ❌           | ❌           |
 | `DELETE /api/classes/{id}`         | ✅     | ❌           | ❌           |
 | `POST /api/knowledge_tests`        | ✅     | ✅           | ❌           |
-| `GET /api/knowledge_tests`         | ✅     | ✅           | ❌           |
+| `GET /api/knowledge_tests`         | ✅     | ☑️ (own tests) | ❌           |
 | `GET /api/knowledge_tests/{id}`    | ✅     | ✅           | ❌           |
 | `PATCH /api/knowledge_tests/{id}`  | ✅     | ☑️ (author) | ❌           |
 | `DELETE /api/knowledge_tests/{id}` | ✅     | ☑️ (author) | ❌           |
-| `POST /api/grades`                 | ✅     | ✅           | ❌           |
-| `GET /api/grades`                  | ✅     | ✅           | ❌           |
-| `GET /api/grades/{id}`             | ✅     | ✅           | ❌           |
+| `POST /api/grades`                 | ✅     | ☑️ (own tests) | ❌           |
+| `GET /api/grades`                  | ✅     | ☑️ (own tests) | ❌           |
+| `GET /api/grades/{id}`             | ✅     | ☑️ (author) | ❌           |
 | `PATCH /api/grades/{id}`           | ✅     | ☑️ (author) | ❌           |
 | `DELETE /api/grades/{id}`          | ✅     | ☑️ (author) | ❌           |
